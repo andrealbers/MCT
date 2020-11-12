@@ -1,27 +1,26 @@
-/*
- * a1.h
+/**
+ * \file a1.h
  *
- *  Created on: 29.10.2020
- *      Author: andre
- */
+ * \authors Gustav Hey, André Albers
+ *
+ * \date 05. November 2020
+ *
+ * \version 1.0
+ *  Erstellung
+*/
 
 #ifndef A1_H_
 #define A1_H_
 
-//VARIABLEN
-#define STOP 0
-#define START 1
-#define LEFT 0
-#define RIGHT 1
-#define LEDTIME 200
-
-//EINGAENGE
-#define TA1 6  //PO.6
-#define TA2 7  //P0.7
-#define TA3 8  //P0.8
-
-//AUSGAENGE
-
+//MAKROS
+#define STOP 0 /**< STOP Zustand */
+#define START 1 /**< START Zustand */
+#define LEFT 0 /**< LED Richtung LEFT  */
+#define RIGHT 1 /**< LED Richtung RIGHT */
+#define LEDTIME 200 /**< Delay zwischen der Weiterschaltung der LEDs */
+#define TA1 1  /**< Tasterzustand ist 1, wenn TA1 gedrückt wurde (P0.6) */
+#define TA2 2   /**< Tasterzustand ist 2, wenn TA2 gedrückt wurde (P0.7) */
+#define TA3 4   /**< Tasterzustand ist 4, wenn TA3 gedrückt wurde (P0.8) */
 
 
 //PROTOTYPEN
