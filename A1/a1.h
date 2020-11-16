@@ -1,7 +1,7 @@
 /**
  * \file a1.h
  *
- * \authors
+ * \authors Gustav Hey, André Albers
  *
  * \date 05. November 2020
  *

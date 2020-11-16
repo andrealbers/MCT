@@ -3,7 +3,7 @@
  */
 
 /**
- * \mainpage A1: Lauflicht
+ * \mainpage A1: Lauflicht - von Gustav Hey (7012604) & André Albers (7012484)
  *
  * \section sec_1 Funktion des Programms
  * Lauflicht der orangen LEDs, gesteuert über Taster TA1-TA3 <br>
