@@ -50,7 +50,7 @@ void keyhandler(uint32_t *ZustandKeys) {
 }
 
 int main(void) {
-
+	uint32_t abstand = 0.0;
 	i2c_init(I2C_SM);
 	io_init(); //I/O-Ports initialisieren
 	lcd_init(4, I2C_SM);
@@ -59,15 +59,16 @@ int main(void) {
 	//digitalWrite(LED7pin, yLEDport, LOW);
 	//uint32_t key = digitalRead(TA3pin, TAport);
 
-	while (1) {
+	lcd_write_string_xy("in mm", 6,1);
 
-		if (digitalRead(TA1pin, TAport) == LOW) {
-			lcd_write_uint(getDistance(), 5);
-			delay(50000);
-			lcd_clrscr();
+	while (1) {
+			abstand = getDistance();
+			lcd_gotoxy(1,1);
+			lcd_write_uint(abstand, 4);
+			delay(10000);
 		}
 
-	}
+
 
 	i2c_exit();
 	return 0;
