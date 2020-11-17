@@ -36,6 +36,11 @@ static LPC_GPIO_TypeDef (* const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO
 #define HC_Echopin 1   //Echosignal vom Ultraschallsensor
 #define HCport 0
 
+//4 Stelliges 7segment Display mit TM1637
+#define Siebensegment_CLKpin 10
+#define Siebensegment_DIOpin 11
+#define Siebensegmentport 0
+
 //Orange LEDs auf Mainboard
 #define yLEDport 2
 #define LED0pin 1

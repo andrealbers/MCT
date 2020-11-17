@@ -10,15 +10,17 @@
 
 #include "i2c_1769.h"
 #include "GPIO.h"
+#include "HC_SR04.h"
+#include "main.h"
 
-#define PCRIT 1 << 16 //Power Control -> Peripherie aktivieren
-#define RITEN 1 << 3  //Timer aktivieren/deaktivieren -> 1 = Aktivieren , 0 = Deaktivieren
-#define PCLK_RIT 0b01 << 26 //Timer Clock auf  CCLK setzen
+uint32_t runden(float zahl) {
+	if(zahl>0) return (int)(zahl+0.5);
 
-#define schallgeschwindigkeit 343.0 //in m/s
+	return (int)(zahl-0.5);
+}
 
 uint32_t getDistance(void) { //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s -> 34,3cm/ms
-	uint32_t duration[6] = {0,0,0,0,0,0};
+	uint32_t duration[6] = { 0, 0, 0, 0, 0, 0 };
 	float mittelDuration = 0, usDuration = 0, distance = 0;
 
 	LPC_SC->PCONP |= PCRIT;          //Peripherie aktivieren
@@ -29,7 +31,7 @@ uint32_t getDistance(void) { //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s
 	for (int i = 0; i <= 4; i++) {
 		LPC_RIT->RICOUNTER = 0;
 		digitalWrite(HC_Triggerpin, HCport, HIGH); //Ultraschallsensor triggern (min 10µs Signal auf HIGH halten)
-		delay(500);
+		delay(50);
 		digitalWrite(HC_Triggerpin, HCport, LOW); //Jetzt sendet der Ultraschallsensor einen Burst aus
 
 		while (digitalRead(HC_Echopin, HCport) == LOW) {
@@ -49,14 +51,15 @@ uint32_t getDistance(void) { //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s
 		delay(5000);
 	}
 	mittelDuration = duration[5] / 5;  //Mittelwert bestimmen
-	mittelDuration = mittelDuration / 2;
+	mittelDuration = mittelDuration / 2;  //Nur Signallaufzeit hin bzw. zurück
 	usDuration = ((float) mittelDuration) * (10.0 / 1000.0); //Zeit in us die gebraucht wurde für hin bzw zurück
 	distance = usDuration * ((schallgeschwindigkeit * 100.0) / 1000000.0); //Abstand in cm Hin bzw Zurück
-	distance = distance * 10;  //Ausgabe in mm..
+//	distance = distance * 10;  //Ausgabe in mm..
 
-	return distance;
+	uint32_t rnd_abstand = runden(distance);
+
+	return rnd_abstand+6;  //Gehäusebreite 6cm
 }
 
-void setMatrix(void) {
 
-}
+
