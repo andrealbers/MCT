@@ -52,7 +52,16 @@ static LPC_GPIO_TypeDef (* const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO
 #define LED6pin 7
 #define LED7pin 8
 
+//RGB-LED auf Mainboard
+#define RGB_R 22    //ROT
+#define RGB_Rport 0
+#define RGB_G 25    //GRÜN
+#define RGB_B 26    //BLAU
+#define RGB_GBport 3
 
+//Lautsprecher
+#define Speakerpin 9
+#define Speakerport 0
 
 //PROTOTYPEN
 void digitalWrite(uint32_t pin, uint32_t port, uint32_t set);

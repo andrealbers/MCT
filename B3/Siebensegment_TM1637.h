@@ -13,7 +13,7 @@
 #define DisplayOFF 0b10001000 //Display AUS
 #define DisplayON 0b10001000 //Display AN
 
-#define bitdelay 10 //Delay zwischen Umschalten Clk
+#define bitdelay 5 //Delay zwischen Umschalten Clk
 
 uint32_t segmente[4] = { 0b11000000,   //1
 		0b11000001,   //2

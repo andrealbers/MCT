@@ -22,12 +22,12 @@ uint32_t runden(float zahl) {
 uint32_t getDistance(void) { //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s -> 34,3cm/ms
 	uint32_t duration[6] = { 0, 0, 0, 0, 0, 0 };
 	float mittelDuration = 0, usDuration = 0, distance = 0;
-
+/*
 	LPC_SC->PCONP |= PCRIT;          //Peripherie aktivieren
 	LPC_SC->PCLKSEL1 &= ~(0b11 << 26);  //Erst löschen
 	LPC_SC->PCLKSEL1 |= (PCLK_RIT);       //Dann Timer Clock auf CCLK setzen
 	LPC_RIT->RICTRL &= ~(RITEN); //Timer deaktivieren
-
+*/
 	for (int i = 0; i <= 4; i++) {
 		LPC_RIT->RICOUNTER = 0;
 		digitalWrite(HC_Triggerpin, HCport, HIGH); //Ultraschallsensor triggern (min 10µs Signal auf HIGH halten)
