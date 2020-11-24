@@ -1,52 +1,55 @@
-/*
- * main.h
+/**
+ * \file main.h
  *
- *  Created on: 17.11.2020
- *      Author: andre
+ * \authors André Albers, Gustav Hey
+ *
+ * \date 12. November 2020
+ *
+ * \version 1.1
+ * Auslesen der Taster T1-T4 ausschließlich dann, wenn Interrupt erfolgte
+ *
+ * \version 1.0
+ *  Erstellung
  */
 
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#define I2C_PCF8574A_ADDR 0x7E
-
-
-#define TA1 0b001
-#define TA2 0b010
-#define TA3 0b100
-
-#define T1 0b1110
-#define T2 0b1101
-#define T3 0b1011
-#define T4 0b0111
-
-#define L1 0
-#define L2 1
-#define L3 2
-#define RESET_DATA 3 //Nur zum Reset
-#define L1_1 4
-
-#define CLR_I2CLED 0b11111111
-#define I2CLED1 0b11111110
-#define I2CLED2 0b11111101
-#define I2CLED3 0b11111011
-#define I2CLED4 0b11110111
+#define TA1 0b001  //TA1 gedrückt
+#define TA2 0b010  //TA2 gedrückt
+#define TA3 0b100  //TA3 gedrückt
 
 
 
-#define RGB_EIN 0
-#define RGB_AUS 1
+#define L1 0           //Abstand L1
+#define L2 1           //Abstand L2
+#define L3 2           //Abstand L3
+#define RESET_DATA 3   //Nur zum Reset
+#define L1_1 4         //Wird für Alarmfunktion verwendet
 
-#define UNTER 0
-#define UEBER 1
+#define RGB_EIN 0  //Zustand für RGB einschalten
+#define RGB_AUS 1  //Zustand für RGB ausschalten
 
-#define startwert 600
-#define kstartwert 200
-#define abtastzeit 1000
+#define UNTER 0  //Zustand für Alarmtyp unterschreiten
+#define UEBER 1  //Zustand für Alarmtyp überschreiten
 
-#define Leerzeile "                    "
+#define startwert 600    //Lautsprecher
+#define kstartwert 200   //Lautsprecher
+#define abtastzeit 1000  //Lautsprecher
 
+#define Leerzeile "                    "   //Um eine Zeile des LCDs zu löschen (20 Zeichen)
+
+void io_init(void);
 void delay(volatile uint32_t dtime);
-uint32_t geti2cKeys();
+void Tkeyhandler(uint32_t *i2ckeys, uint32_t *zu_erf_abstand);
+uint32_t getTkeys();
+void writeFrontLED(uint32_t led);
+void lcdhandler(uint32_t *zustand, uint32_t *abstand);
+uint32_t getTAkeys();
+void TAkeyhandler(uint32_t *TAzustand, uint32_t *alrm_on, uint32_t *alrm_typ);
+void saveDistance(uint32_t *abstande, uint32_t *zu_erf_abstand);
+void writeSpeaker();
+void distanzalarmHandler(uint32_t *abstande, uint32_t *alarmtyp);
+int main(void);
 
 #endif /* MAIN_H_ */

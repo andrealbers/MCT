@@ -1,8 +1,5 @@
-/*
- * timer.h
- *
- *  Created on: 18.11.2020
- *      Author: andre
+/**
+ *  \file timer.h
  */
 
 #ifndef TIMER_H_

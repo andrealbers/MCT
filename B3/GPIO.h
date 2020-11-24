@@ -1,8 +1,5 @@
-/*
- * GPIO.h
- *
- *  Created on: 13.11.2020
- *      Author: andre
+/**
+ *  \file GPIO.h
  */
 
 #ifndef GPIO_H_
@@ -63,8 +60,13 @@ static LPC_GPIO_TypeDef (* const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO
 #define Speakerpin 9
 #define Speakerport 0
 
+#define InterruptI2CFrontpin 13
+#define InterruptI2CFrontport 2
+
+
 //PROTOTYPEN
+void pinMode(uint32_t pin, uint32_t portnr, uint32_t mode);
 void digitalWrite(uint32_t pin, uint32_t port, uint32_t set);
 uint32_t digitalRead(uint32_t pin, uint32_t port);
-void pinMode(unsigned int pin, unsigned int portnr, unsigned int mode);
+
 #endif /* GPIO_H_ */

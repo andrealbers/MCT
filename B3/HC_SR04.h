@@ -1,8 +1,5 @@
-/*
- * HC_SR04.h
- *
- *  Created on: 17.11.2020
- *      Author: andre
+/**
+ *  \file HC_SR04.h
  */
 
 #ifndef HC_SR04_H_
@@ -14,7 +11,7 @@
 
 #define schallgeschwindigkeit 343.0 //in m/s
 
-
+uint32_t runden(float zahl);
 uint32_t getDistance(void);
 
 #endif /* HC_SR04_H_ */

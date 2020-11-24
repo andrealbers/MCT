@@ -1,9 +1,7 @@
-/*
- * HC_SR04.c
- *
- *  Created on: 16.11.2020
- *      Author: andre
+/**
+ *  \file HC_SR04.c
  */
+
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
 #endif
@@ -13,12 +11,33 @@
 #include "HC_SR04.h"
 #include "main.h"
 
+/**
+ * \brief <b>Gleitkommazahl runden</b>
+ * @param zahl Zahl die gerundet werden soll
+ * @return Gerundete Zahl
+ */
 uint32_t runden(float zahl) {
 	if(zahl>0) return (int)(zahl+0.5);
 
 	return (int)(zahl-0.5);
 }
 
+/**
+ * \brief <b>Distanz zu einem Objekt bestimmen</b> <br>
+ * Zeit bei dem das Signals vom Echopin auf HIGH ist, bestimmt Laufzeit des Ultraschallsignals
+ * - Ultraschallsensor wird getriggert
+ *  - Sobald der Echopin von LOW auf HIGH wechselt wird der RIT aktiviert
+ *  - Der Timer läuft so lange, bis der Echopin den Zustand LOW einimmt
+ *  - RIT deaktivieren und Laufzeit in dem Array "duration" speichern
+ *  - Dieses Verfahren insgesamt 5x durchlaufen
+ *  - Summe aller Laufzeiten wird im Array "duration" an Stelle 5 gespeichert
+ * - Mittelwert von allen 5 Laufzeiten wird in "mittelDuration" abgelegt
+ * - Diese Laufzeit wird halbiert, da die Laufzeit für den Hin- und Rückweg gilt
+ * - Anschließend erfolgt die Umrechnung in µs. Ein Inkrement des Timers entspricht 10ns. Daher wird "mittelDuration mit (10ns/1000ns)*1µs multipliziert.
+ * - Um nun diese Zeit in eine Entfernung umwandeln zu können, wird die Zeit (µs) mit der Schallgeschwindigkeit (in cm/µs) multipliziert.
+ * - Nun wird der Abstand vom Datentyp float gerundet und als unsigned int + Gehäusebreite (6cm) an die aufrufende Funktion übergeben.
+ * @return Entfernung zum Objekt in cm (mit Gehäusebreite)
+ */
 uint32_t getDistance(void) { //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s -> 34,3cm/ms
 	uint32_t duration[6] = { 0, 0, 0, 0, 0, 0 };
 	float mittelDuration = 0, usDuration = 0, distance = 0;
@@ -46,9 +65,9 @@ uint32_t getDistance(void) { //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s
 
 		LPC_RIT->RICTRL &= ~(RITEN); //Timer deaktivieren
 
-		duration[i] = LPC_RIT->RICOUNTER; //Inkrementiert in 120MHz? -> 8.3ns pro Inkrement o. 100MHz -> 10ns pro Inkrement
+		duration[i] = LPC_RIT->RICOUNTER; //Inkrementiert in 10ns pro Inkrement
 		duration[5] = duration[5] + duration[i];
-		delay(5000);
+		delay(5000);  //Bis zum erneuten triggern min 20ms warten
 	}
 	mittelDuration = duration[5] / 5;  //Mittelwert bestimmen
 	mittelDuration = mittelDuration / 2;  //Nur Signallaufzeit hin bzw. zurück

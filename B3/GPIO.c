@@ -1,8 +1,5 @@
 /**
- *
- * @param port
- * @param bit
- * @param type
+ *  \file GPIO.c
  */
 
 #ifdef __USE_CMSIS
@@ -10,10 +7,24 @@
 #endif
 #include "GPIO.h"
 
+/**
+ * \brief <b>Funktion um GPIO-Mode eines Pins zu setzen</b><br>
+ * Je nach Port werden unterschiedliche Register angesteuert. Da man aus dem GPIO-Portpin nicht schließen kann, an welchem Port dieser angeschlossen ist,
+ * wird dieser auch an die Funktion übergeben. <br>
+ * Zudem werden für das Setzen des Pins als GPIO (PINSELX) und das Einstellen des Modus (PINMODEX) für den gleichen Port, verschiedene Register verwendet,
+ * da für jeden Pin 2 Bits verwendet werden müssen und die Breite des Register auf 32 begrenzt ist. Daher ist auch eine Verdopplung des Verschiebens, sowie das Aufdoppeln
+ * des Bitmusters notwendig. <br>
+ * Folglich ist zwischen dem GPIO-Portpinbereich 0-15 und 16-31 zu unterscheiden, um so das richtige Register für PINSEL und PINMODE zu setzen. <br>
+ * Dies gilt nicht für das Register FIODIR (Pin ist Eingang/Ausgang), da dieses nur 2 Zustände pro GPIO-Portpin annehmen kann.
+ *
+ * @param pin GPIO-Pin an dem der Mode gesetzt werden soll
+ * @param portnr Port des GPIO-Pins
+ * @param mode Mode der gesetzt werden soll; PULLUP, PULLDOWN, OUTPUT
+ */
 void pinMode(uint32_t pin, uint32_t portnr, uint32_t mode) {
-	unsigned int bit = 1 << pin;
-	unsigned int dbl_pin = (bit << (pin + 1)) + bit; //Aus z.B. 100 -> 100 100
-	dbl_pin = dbl_pin << 2 * pin;  //Aus z.B. x<<3 -> x<<6
+	unsigned int bit = 1 << pin; //Um die 1 zu schieben..
+	unsigned int dbl_pin = (bit << (pin + 1)) + bit; //Aus z.B. 10 -> 10 10; Wird für PINSEL und PINMODE benötigt
+	dbl_pin = dbl_pin << 2 * pin;  //Aus z.B. x<<3 -> x<<6; Wird für PINSEL und PINMODE benötigt
 
 	switch (portnr) {
 	case 0:
@@ -98,6 +109,12 @@ void pinMode(uint32_t pin, uint32_t portnr, uint32_t mode) {
 	}
 }
 
+/**
+ * \brief <b>Setzen eines GPIO-Pinport auf HIGH bzw. LOW</b> <br>
+ * @param pin Der zu setzende Pin
+ * @param port Port an dem Pin angeschlossen ist
+ * @param set Pin auf HIGH/LOW setzen
+ */
 void digitalWrite(uint32_t pin, uint32_t port, uint32_t set) {
 	if (set == HIGH)
 		LPC_GPIO[port]->FIOSET = (1 << pin);
@@ -105,6 +122,14 @@ void digitalWrite(uint32_t pin, uint32_t port, uint32_t set) {
 		LPC_GPIO[port]->FIOCLR = (1 << pin);
 }
 
+/**
+ * \brief <b>Zustand des GPIO-Pinports auslesen</b> <br>
+ * Hierbei werden alle Zustände des Ports ausgelesen und anschließend mit dem auszulesenden Pins verundet. <br>
+ * Dadurch wird nur der Zustand am Pin augelesen. Als Rückgabewert erfolgt der Zustand kodiert als HIGH(1) oder LOW(0). <br>
+ * @param pin Der auszulesende Pin
+ * @param port Port an dem der Port angeschlossen ist
+ * @return Zustand des GPIO-Pinports HIGH/LOW
+ */
 uint32_t digitalRead(uint32_t pin, uint32_t port) {
 	uint32_t var;
 
