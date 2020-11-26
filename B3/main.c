@@ -76,12 +76,13 @@
 #include <stdio.h>
 #include "GPIO.h"
 #include "HC_SR04.h"
-//#include "Siebensegment_TM1637.h"
-#include <PCA9539.h>
+#include "Siebensegment_TM1637.h"
+#include "PCA9539.h"
 #include "PCF8574.h"
 #include "main.h"
 #include "lcdlib_1769.h"
 #include "i2c_1769.h"
+#include "timer.h"
 
 //INterrupt von i2c tastern
 
@@ -175,21 +176,19 @@ void TAkeyhandler(uint32_t *TAzustand, uint32_t *alrm_on, uint32_t *alrm_typ) {
 		*alrm_on = HIGH;
 		*alrm_typ = UNTER;
 		lcd_write_string_xy("unter", 6, 4);
-		digitalWrite(RGB_R, RGB_Rport, RGB_EIN);
-		digitalWrite(RGB_G, RGB_GBport, RGB_EIN);
+		set_rgb(RGB_R);
+		set_rgb(RGB_G);
 		break;
 	case TA2:
 		*alrm_on = HIGH;
 		*alrm_typ = UEBER;
 		lcd_write_string_xy("ueber", 6, 4);
-		digitalWrite(RGB_R, RGB_Rport, RGB_AUS);
-		digitalWrite(RGB_G, RGB_GBport, RGB_EIN);
+		set_rgb(RGB_AUS);
+		set_rgb(RGB_G);
 		break;
 	case TA3:
 		*alrm_on = LOW;
-		digitalWrite(RGB_R, RGB_Rport, RGB_AUS);
-		digitalWrite(RGB_G, RGB_GBport, RGB_AUS);
-		digitalWrite(RGB_B, RGB_GBport, RGB_AUS);
+		set_rgb(RGB_AUS);
 		lcd_write_string_xy(Leerzeile, 1, 4);
 		break;
 	}
@@ -252,31 +251,110 @@ void Tkeyhandler(uint32_t *i2ckeys, uint32_t *zu_erf_abstand) {
  *
  * @param zustand Der gerade gemessende Abstand, L4 = RESET_DATA
  * @param abstand Distanz von dem gerade gemessenden Abstand
+ * @param ZustandI2CLEDs Zustand der Frontpanel-LEDs
  */
-void lcdhandler(uint32_t *zustand, uint32_t *abstand) {
+void lcdhandler(uint32_t *zustand, uint32_t *abstand, uint32_t *ZustandI2CLEDs) {
+
 	switch (*zustand) {
 	case L1:
-		writeFrontLED(I2CLED1);
+		lcd_write_string_xy(Leerzeile, 1, 1);
+		*ZustandI2CLEDs &= I2CLED1;
 		lcd_write_string_xy("L1=", 1, 1);
 		lcd_write_uint(abstand[L1], 4);
 		lcd_write_string_xy("cm", 8, 1);
 		break;
 	case L2:
-		writeFrontLED(I2CLED1 & I2CLED2);
+		lcd_write_string_xy(Leerzeile, 1, 2);
+		*ZustandI2CLEDs &= I2CLED2;
 		lcd_write_string_xy("L2=", 1, 2);
 		lcd_write_uint(abstand[L2], 4);
-		lcd_write_string_xy("cm. A=", 8, 2);
+		lcd_write_string_xy("cm, A=", 8, 2);
+		uint32_t flaecheninhaltcm = abstand[L1] * abstand[L2],
+				flaecheninhaltqm = flaecheninhaltcm / 10000, _flaecheninhaltcm =
+						flaecheninhaltcm, _flaecheninhaltqm = flaecheninhaltqm,
+				anzStellencm = 0, anzStellenqm = 0;
 
-		lcd_write_uint((abstand[L1] * abstand[L2]) / 10000, 5);
+		while (_flaecheninhaltcm != 0) { //Erhalte Anzahl der ganzen Stellen von dem Flächeninhalt in cm2
+			_flaecheninhaltcm = _flaecheninhaltcm / 10;
+			anzStellencm++;
+		}
+
+		while (_flaecheninhaltqm != 0) { //Erhalte Anzahl der ganzen Stellen von dem Flächeninhalt in m2
+			_flaecheninhaltqm = _flaecheninhaltqm / 10;
+			anzStellenqm++;
+		}
+
+		if (flaecheninhaltqm == 0) {  //Wenn Flächeninhalt <1qm
+			lcd_write_string_xy("0.", 14, 2);
+			lcd_write_uint(flaecheninhaltcm, 2);
+
+		} else {                                      //Wenn Flächeninhalt >1qm
+			lcd_write_uint(flaecheninhaltqm, anzStellenqm); //Schreibe erste Zahlen vom Flächeninhalt in m2
+			if (anzStellenqm < 3) {
+				lcd_write_string_xy(".", 14 + anzStellenqm, 2); //Setze . nach den ganzen Zahlen
+
+				while (anzStellencm > 3) { //Teile so lange die Zahl durch 10, bis 3 Ziffern erhalten
+					flaecheninhaltcm = flaecheninhaltcm / 10;
+					anzStellencm--;
+				}
+
+				uint32_t i = 0;
+				while (anzStellenqm < 3) {
+					lcd_gotoxy(17 - i, 2); //Setze Cursor auf die letzte zu beschreibende Position für Ziffer
+					lcd_write_uint(flaecheninhaltcm % 10, 1); //Schreibe letzte Ziffer auf Display
+					flaecheninhaltcm = flaecheninhaltcm / 10; //Teile durch 10, um nächste Ziffer zu erhalten
+					anzStellenqm++;
+					i++;
+				}
+			}
+		}
 		lcd_write_string_xy("qm", 19, 2);
+
 		break;
 	case L3:
-		writeFrontLED(I2CLED1 & I2CLED2 & I2CLED3);
+		lcd_write_string_xy(Leerzeile, 1, 3);
+		*ZustandI2CLEDs &= I2CLED3;
 		lcd_write_string_xy("L3=", 1, 3);
 		lcd_write_uint(abstand[L3], 4);
-		lcd_write_string_xy("cm. V=", 8, 3);
+		lcd_write_string_xy("cm, V=", 8, 3);
+		uint32_t volumenccm = abstand[L1] * abstand[L2] * abstand[L3],
+				volumencbm = volumenccm / 1000000, _volumenccm = volumenccm,
+				_volumencbm = volumencbm, anzStellenccm = 0, anzStellencbm = 0;
 
-		lcd_write_uint((abstand[L1] * abstand[L2] * abstand[L3]) / 1000000, 4);
+		while (_volumenccm != 0) { //Erhalte Anzahl der ganzen Stellen von dem Volumen in cm3
+			_volumenccm = _volumenccm / 10;
+			anzStellenccm++;
+		}
+
+		while (_volumencbm != 0) { //Erhalte Anzahl der ganzen Stellen von dem Volumen in m3
+			_volumencbm = _volumencbm / 10;
+			anzStellencbm++;
+		}
+
+		if (volumencbm == 0) {  //Wenn Volumen <1m3
+			lcd_write_string_xy("0.", 14, 3);
+			lcd_write_uint(volumenccm/1000, 3);
+
+		} else {                                      //Wenn Volumen >1m3
+			lcd_write_uint(volumencbm, anzStellencbm); //Schreibe erste Zahlen vom Volumen in m3
+			if (anzStellencbm < 3) {
+				lcd_write_string_xy(".", 14 + anzStellencbm, 3); //Setze . nach den ganzen Zahlen
+
+				while (anzStellenccm > 3) { //Teile so lange die Zahl durch 10, bis 3 Ziffern erhalten
+					volumenccm = volumenccm / 10;
+					anzStellenccm--;
+				}
+
+				uint32_t i = 0;
+				while (anzStellencbm < 3) {
+					lcd_gotoxy(17 - i, 3); //Setze Cursor auf die letzte zu beschreibende Position für Ziffer
+					lcd_write_uint(volumenccm % 10, 1); //Schreibe letzte Ziffer auf Display
+					volumenccm = volumenccm / 10; //Teile durch 10, um nächste Ziffer zu erhalten
+					anzStellencbm++;
+					i++;
+				}
+			}
+		}
 		lcd_write_string_xy("cbm", 18, 3);
 		break;
 	case RESET_DATA:
@@ -294,7 +372,7 @@ void lcdhandler(uint32_t *zustand, uint32_t *abstand) {
 			abstand[L3] = 0;
 			lcd_clrscr();
 			clrSegments();
-			writeFrontLED(CLR_I2CLED);
+			*ZustandI2CLEDs = CLR_I2CLED;
 		}
 
 		lcd_write_string_xy(Leerzeile, 1, 4);
@@ -308,9 +386,8 @@ void lcdhandler(uint32_t *zustand, uint32_t *abstand) {
 	default:
 		break;
 	}
-
+	writeFrontLED(*ZustandI2CLEDs);
 }
-
 /**
  * \brief <b>Funktion um Abstand zu speichern und diesen am Siebensegment und auf dem Display anzuzeigen. <br>
  *    Wenn T4 gedrückt wurde, wird diese Funktion nicht aufgerufen!</b><br>
@@ -319,11 +396,12 @@ void lcdhandler(uint32_t *zustand, uint32_t *abstand) {
  * - Ausgabe auf dem LCD
  * @param abstande Array beinhaltet alle gemessenden Abstände
  * @param zu_erf_abstand Der geforderte Abstand, der gemessen werden soll
+ * @param ZustandFrontLEDs Zustand der Frontpanel-LEDs
  */
-void saveDistance(uint32_t *abstande, uint32_t *zu_erf_abstand) {
+void saveDistance(uint32_t *abstande, uint32_t *zu_erf_abstand, uint32_t *ZustandFrontLEDs) {
 	abstande[*zu_erf_abstand] = getDistance(); //Rückgabewert ist die Entfernung mit Gehäusetiefe
 	setinttoSegment(abstande[*zu_erf_abstand]); //Jetzt auf das Siebensegment mappen
-	lcdhandler(zu_erf_abstand, abstande);
+	lcdhandler(zu_erf_abstand, abstande, ZustandFrontLEDs);
 }
 
 /**
@@ -359,7 +437,6 @@ void writeSpeaker() {
 			k++;
 		}
 	}
-
 }
 
 /**
@@ -423,10 +500,11 @@ void distanzalarmHandler(uint32_t *abstande, uint32_t *alarmtyp) {
  * @return
  */
 int main(void) {
-	uint32_t clock = SystemCoreClock; //Um CCLK zu bekommen..
+	//uint32_t clock = SystemCoreClock; //Um CCLK zu bekommen..
 
 	uint32_t zu_erf_abstand = L1, i2ckeys = 0b1111, zi2ckeys = 0b1111, TAkeys =
-			0b000, zTAkeys = 0b000, alrm_on = LOW, alrm_typ = UNTER;
+			0b000, zTAkeys = 0b000, alrm_on = LOW, alrm_typ =
+	UNTER, ZustandFrontLEDs = CLR_I2CLED;
 	uint32_t abstande[5] = { 0, 0, 0, 0, 0 };
 
 	i2c_init(I2C_SM);
@@ -436,9 +514,7 @@ int main(void) {
 	io_init(); //I/O-Ports initialisieren
 	clrSegments();
 	writeFrontLED(CLR_I2CLED);
-	digitalWrite(RGB_R, RGB_Rport, RGB_AUS);
-	digitalWrite(RGB_G, RGB_GBport, RGB_AUS);
-	digitalWrite(RGB_B, RGB_GBport, RGB_AUS);
+	set_rgb(RGB_AUS);
 	timer_init();
 
 	while (1) {
@@ -451,11 +527,11 @@ int main(void) {
 			if ((zu_erf_abstand == L1)
 					|| ((zu_erf_abstand == L2) && (abstande[L1] != 0))
 					|| ((zu_erf_abstand == L3) && (abstande[L2] != 0))) {
-				saveDistance(abstande, &zu_erf_abstand);
+				saveDistance(abstande, &zu_erf_abstand, &ZustandFrontLEDs);
 			}
 
 			if (zu_erf_abstand == RESET_DATA)
-				lcdhandler(&zu_erf_abstand, abstande);
+				lcdhandler(&zu_erf_abstand, abstande, &ZustandFrontLEDs);
 		}
 
 		if (((TAkeys != zTAkeys) && (TAkeys != 0b000) && (abstande[L1] != 0))
@@ -463,7 +539,7 @@ int main(void) {
 			TAkeyhandler(&TAkeys, &alrm_on, &alrm_typ);
 			if (alrm_on == HIGH) {
 				zu_erf_abstand = L1_1;
-				saveDistance(abstande, &zu_erf_abstand);
+				saveDistance(abstande, &zu_erf_abstand, &ZustandFrontLEDs);
 				distanzalarmHandler(abstande, &alrm_typ);
 			}
 		}

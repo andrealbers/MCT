@@ -8,6 +8,7 @@
 #include "Siebensegment_TM1637.h"
 #include "GPIO.h"
 #include "lcdlib_1769.h"
+#include "main.h"
 
 /**
  * \brief <b>Ein Byte zum Siebensegment-Treiber TM1637 senden</b><br>
@@ -115,15 +116,22 @@ void stopComm() {
  *  - Stoppe Verbindung
  */
 void clrSegments() {
-	uint32_t ack = 1;
+	const uint32_t segmente[] = { 0b11000000,   //1
+			0b11000001,   //2
+			0b11000010,   //3
+			0b11000011,   //4
+			};
+
+//	uint32_t ack = 1;
+
 	for (int i = 0; i < 4; i++) {
 		startComm();
-		ack = writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden, ack = 0, wenn erfolgreich
+		writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden, ack = 0, wenn erfolgreich
 		stopComm();
 
 		startComm();
-		ack = writeByte(segmente[i]); //Adresse setzen für Segment
-		ack = writeByte(0x0);
+		writeByte(segmente[i]); //Adresse setzen für Segment
+		writeByte(0x0);
 		stopComm();
 		/*
 		 startComm();
@@ -144,15 +152,21 @@ void clrSegments() {
  * @param segmentnr Das zu löschende Segment
  */
 void clrSegment(uint32_t segmentnr) {
-	uint32_t ack = 1;
+	const uint32_t segmente[] = { 0b11000000,   //1
+					0b11000001,   //2
+					0b11000010,   //3
+					0b11000011,   //4
+					};
+
+	//uint32_t ack = 1;
 
 	startComm();
-	ack = writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden, ack = 1, wenn erfolgreich
+	writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden, ack = 1, wenn erfolgreich
 	stopComm();
 
 	startComm();
-	ack = writeByte(segmente[segmentnr]); //Adresse setzen für Segment
-	ack = writeByte(0x0);
+	writeByte(segmente[segmentnr]); //Adresse setzen für Segment
+	writeByte(0x0);
 	stopComm();
 
 	/*
@@ -176,15 +190,33 @@ void clrSegment(uint32_t segmentnr) {
  * @param segment Segment auf dem die Zahl abgebildet werden soll
  */
 void setSegment(uint32_t zahl, uint32_t segment) {
-	uint32_t ack = 1;
+	const uint32_t segmente[] = { 0b11000000,   //1
+				0b11000001,   //2
+				0b11000010,   //3
+				0b11000011,   //4
+				};
+
+	const uint32_t zahlen[10] = { 0b00111111,    // 0
+			0b00000110,    // 1
+			0b01011011,    // 2
+			0b01001111,    // 3
+			0b01100110,    // 4
+			0b01101101,    // 5
+			0b01111101,    // 6
+			0b00000111,    // 7
+			0b01111111,    // 8
+			0b01101111,    // 9
+			};
+
+	//uint32_t ack = 1;
 
 	startComm();
-	ack = writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden, ack = 1, wenn erfolgreich
+	writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden, ack = 1, wenn erfolgreich
 	stopComm();
 
 	startComm();
-	ack = writeByte(segmente[segment]); //Adresse setzen für Segment
-	ack = writeByte(zahlen[zahl]);
+	writeByte(segmente[segment]); //Adresse setzen für Segment
+	writeByte(zahlen[zahl]);
 	stopComm();
 
 	/*

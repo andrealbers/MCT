@@ -24,7 +24,7 @@
 void pinMode(uint32_t pin, uint32_t portnr, uint32_t mode) {
 	unsigned int bit = 1 << pin; //Um die 1 zu schieben..
 	unsigned int dbl_pin = (bit << (pin + 1)) + bit; //Aus z.B. 10 -> 10 10; Wird für PINSEL und PINMODE benötigt
-	dbl_pin = dbl_pin << 2 * pin;  //Aus z.B. x<<3 -> x<<6; Wird für PINSEL und PINMODE benötigt
+	dbl_pin = dbl_pin << 2 * pin; //Aus z.B. x<<3 -> x<<6; Wird für PINSEL und PINMODE benötigt
 
 	switch (portnr) {
 	case 0:
@@ -142,4 +142,30 @@ uint32_t digitalRead(uint32_t pin, uint32_t port) {
 		var = LOW;
 
 	return var;
+}
+
+/**
+ * \brief <b>RGB-LEDs auf dem Maiboard setzen</b> <br>
+ *  @param rgb_led Die zu setzende LED - RGB_AUS schaltet alle 3 LEDs aus
+ */
+void set_rgb(uint32_t rgb_led) {
+	switch (rgb_led) {
+	case RGB_AUS:
+		digitalWrite(RGB_R, RGB_Rport, RGB_AUS);
+		digitalWrite(RGB_G, RGB_GBport, RGB_AUS);
+		digitalWrite(RGB_B, RGB_GBport, RGB_AUS);
+		break;
+	case RGB_R:
+		digitalWrite(RGB_R, RGB_Rport, RGB_EIN);
+		break;
+	case RGB_G:
+		digitalWrite(RGB_G, RGB_GBport, RGB_EIN);
+		break;
+	case RGB_B:
+		digitalWrite(RGB_B, RGB_GBport, RGB_EIN);
+		break;
+	default:
+		break;
+	}
+
 }

@@ -5,7 +5,7 @@
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
 #endif
-#include <PCA9539.h>
+#include "PCA9539.h"
 #include "i2c_1769.h"
 
 /**

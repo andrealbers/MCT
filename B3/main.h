@@ -27,9 +27,6 @@
 #define RESET_DATA 3   //Nur zum Reset
 #define L1_1 4         //Wird für Alarmfunktion verwendet
 
-#define RGB_EIN 0  //Zustand für RGB einschalten
-#define RGB_AUS 1  //Zustand für RGB ausschalten
-
 #define UNTER 0  //Zustand für Alarmtyp unterschreiten
 #define UEBER 1  //Zustand für Alarmtyp überschreiten
 
@@ -44,10 +41,10 @@ void delay(volatile uint32_t dtime);
 void Tkeyhandler(uint32_t *i2ckeys, uint32_t *zu_erf_abstand);
 uint32_t getTkeys();
 void writeFrontLED(uint32_t led);
-void lcdhandler(uint32_t *zustand, uint32_t *abstand);
+void lcdhandler(uint32_t *zustand, uint32_t *abstand, uint32_t *ZustandI2CLEDs);
 uint32_t getTAkeys();
 void TAkeyhandler(uint32_t *TAzustand, uint32_t *alrm_on, uint32_t *alrm_typ);
-void saveDistance(uint32_t *abstande, uint32_t *zu_erf_abstand);
+void saveDistance(uint32_t *abstande, uint32_t *zu_erf_abstand, uint32_t *ZustandFrontLEDs);
 void writeSpeaker();
 void distanzalarmHandler(uint32_t *abstande, uint32_t *alarmtyp);
 int main(void);

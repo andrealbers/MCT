@@ -5,7 +5,8 @@
 #ifndef GPIO_H_
 #define GPIO_H_
 
-static LPC_GPIO_TypeDef (* const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO2, LPC_GPIO3, LPC_GPIO4  };
+static LPC_GPIO_TypeDef (*const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1,
+		LPC_GPIO2, LPC_GPIO3, LPC_GPIO4 };
 /*
  struct GPIO {
  unsigned int port;
@@ -55,6 +56,8 @@ static LPC_GPIO_TypeDef (* const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO
 #define RGB_G 25    //GRÜN
 #define RGB_B 26    //BLAU
 #define RGB_GBport 3
+#define RGB_EIN 0  //Zustand für RGB einschalten
+#define RGB_AUS 1  //Zustand für RGB ausschalten
 
 //Lautsprecher
 #define Speakerpin 9
@@ -63,10 +66,10 @@ static LPC_GPIO_TypeDef (* const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO
 #define InterruptI2CFrontpin 13
 #define InterruptI2CFrontport 2
 
-
 //PROTOTYPEN
 void pinMode(uint32_t pin, uint32_t portnr, uint32_t mode);
 void digitalWrite(uint32_t pin, uint32_t port, uint32_t set);
 uint32_t digitalRead(uint32_t pin, uint32_t port);
+void set_rgb(uint32_t rgb_led);
 
 #endif /* GPIO_H_ */
