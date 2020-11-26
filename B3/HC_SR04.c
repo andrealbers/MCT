@@ -38,7 +38,7 @@ uint32_t runden(float zahl) {
  * - Nun wird der Abstand vom Datentyp float gerundet und als unsigned int + Gehäusebreite (6cm) an die aufrufende Funktion übergeben.
  * @return Entfernung zum Objekt in cm (mit Gehäusebreite)
  */
-uint32_t getDistance(void) { //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s -> 34,3cm/ms
+uint32_t getDistance(void) {             //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s -> 34,3cm/ms
 	uint32_t duration[6] = { 0, 0, 0, 0, 0, 0 };
 	float mittelDuration = 0, usDuration = 0, distance = 0;
 /*
@@ -49,9 +49,9 @@ uint32_t getDistance(void) { //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s
 */
 	for (int i = 0; i <= 4; i++) {
 		LPC_RIT->RICOUNTER = 0;
-		digitalWrite(HC_Triggerpin, HCport, HIGH); //Ultraschallsensor triggern (min 10µs Signal auf HIGH halten)
+		digitalWrite(HC_Triggerpin, HCport, HIGH);       //Ultraschallsensor triggern (min 10µs Signal auf HIGH halten)
 		delay(50);
-		digitalWrite(HC_Triggerpin, HCport, LOW); //Jetzt sendet der Ultraschallsensor einen Burst aus
+		digitalWrite(HC_Triggerpin, HCport, LOW);        //Jetzt sendet der Ultraschallsensor einen Burst aus
 
 		while (digitalRead(HC_Echopin, HCport) == LOW) {
 			//Warten bis Signal auf High wechselt
@@ -65,14 +65,14 @@ uint32_t getDistance(void) { //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s
 
 		LPC_RIT->RICTRL &= ~(RITEN); //Timer deaktivieren
 
-		duration[i] = LPC_RIT->RICOUNTER; //Inkrementiert in 10ns pro Inkrement
+		duration[i] = LPC_RIT->RICOUNTER;         //Inkrementiert in 10ns pro Inkrement
 		duration[5] = duration[5] + duration[i];
-		delay(5000);  //Bis zum erneuten triggern min 20ms warten
+		delay(5000);                              //Bis zum erneuten triggern min 20ms warten
 	}
-	mittelDuration = duration[5] / 5;  //Mittelwert bestimmen
-	mittelDuration = mittelDuration / 2;  //Nur Signallaufzeit hin bzw. zurück
-	usDuration = ((float) mittelDuration) * (10.0 / 1000.0); //Zeit in us die gebraucht wurde für hin bzw zurück
-	distance = usDuration * ((schallgeschwindigkeit * 100.0) / 1000000.0); //Abstand in cm Hin bzw Zurück
+	mittelDuration = duration[5] / 5;             //Mittelwert bestimmen
+	mittelDuration = mittelDuration / 2;          //Nur Signallaufzeit hin bzw. zurück
+	usDuration = ((float) mittelDuration) * (10.0 / 1000.0);  //Zeit in us die gebraucht wurde für hin bzw zurück
+	distance = usDuration * ((schallgeschwindigkeit * 100.0) / 1000000.0);   //Abstand in cm Hin bzw Zurück
 //	distance = distance * 10;  //Ausgabe in mm..
 
 	uint32_t rnd_abstand = runden(distance);

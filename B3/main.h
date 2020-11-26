@@ -15,11 +15,11 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#define TA1 0b001  //TA1 gedrückt
-#define TA2 0b010  //TA2 gedrückt
-#define TA3 0b100  //TA3 gedrückt
-
-
+//MAKROS
+#define TA1 0b001      //TA1 gedrückt
+#define TA2 0b010      //TA2 gedrückt
+#define TA3 0b100      //TA3 gedrückt
+#define TAnokey 0b000  //Zustand, wenn kein TA-Taster gedrückt wurde
 
 #define L1 0           //Abstand L1
 #define L2 1           //Abstand L2
@@ -36,6 +36,8 @@
 
 #define Leerzeile "                    "   //Um eine Zeile des LCDs zu löschen (20 Zeichen)
 
+
+//PROTOTYPEN
 void io_init(void);
 void delay(volatile uint32_t dtime);
 void Tkeyhandler(uint32_t *i2ckeys, uint32_t *zu_erf_abstand);

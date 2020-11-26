@@ -19,8 +19,7 @@
  *	Dabei zeigen folgende <b>Elemente</b> folgenden <b>Zustand</b> an:<br>
  *	<b>Siebensegment am Abstandmessgerätmoduls</b>: Anzeige des zuletzt gemessenen Abstandes in cm. Bei Alarmfunktion AKTIV:
  *	Anzeige des aktuell gemessenen Abstandes in cm. <br>
- *  <b>Rote LEDs am Frontpanel</b>: Wenn eingeschaltet: Abstand wurde bereits gemessen. Sowie bei LED2 und LED3: Die Berechnung des Flächeninhaltes bzw. des Volumeninhaltes
- *  ist aktuell (wenn nach bereits berechnetem Wert ein vorheriger Abstand erneut eingemessen wurde, ist die LED aus). <br>
+ *  <b>Rote LEDs am Frontpanel</b>: Wenn eingeschaltet: Jeweiliger Abstand wurde bereits gemessen. <br>
  *	<b>RGB-LED</b>: <b>GELD</b> Alarmfunktion UNTERSCHREITEN aktiv. <b>GRÜN</b> Alarmfunktion ÜBERSCHREITEN aktiv. <br>
  *	<b>8 rote LEDs auf Mainboard</b>: LED Reihe blinkt, wenn ALARM aktiv (Über- bzw. Unterschreiten der Distanz L1). <br>
  *	<b>Lautsprecher</b>: Lautsprecher erzeugt Tonsignal, wenn ALARM aktiv (Über- bzw. Unterschreiten der Distanz L1).
@@ -34,7 +33,7 @@
  *	<b>TAkeyhandler:</b> Handler um auf einen Tastendruck von TA1 bis TA3 zu reagieren. <br>
  *	<b>Tkeyhandler:</b> Handler um auf einen Tastendruck von T1 bis T4 zu reagieren. <br>
  *
- *	<b>lcdhandler:</b> Ausgabe auf das LC-Display und setzen der Front-LEDs je nach den zu messenden Abstandes. <br>
+ *	<b>lcdhandler:</b> Ausgabe auf das LC-Display und setzen der Front-LEDs je nach den gemessenden Abstandes. <br>
  *	<b>saveDistance:</b> Speichern des gemessenden Abstandes in ein Array, sowie Siebensegment, LC-Display und Front-LEDs setzen. <br>
  *	<b>writeSpeaker:</b> Erzeugen eines Tonsignals (wird bei aktivieren Alarm aufgerufen). <br>
  *	<b>distanzalarmHandler:</b> Wenn die Alarmfunktion aktiv ist, wird diese Funktion aufgerufen. Hier erfolgt die Berechnung, ob der aktiv gemessende Abstand den Wert von
@@ -85,22 +84,22 @@
 #include "i2c_1769.h"
 #include "timer.h"
 
-//INterrupt von i2c tastern
-
 /**
  * \brief <b>Konfiguration der GPIO-Pins des Mikrocontrollers </b>
  */
 void io_init(void) {   //PIN, PORT; MODE (PULLUP, PULLDOWN, OUTPUT)
-	//EINGÄNGE
+	//Setze Taster TA1 bis TA3 als Eingänge im Pullup-Netzwerk
 	pinMode(TA1pin, TAport, PULLUP);
 	pinMode(TA2pin, TAport, PULLUP);
 	pinMode(TA3pin, TAport, PULLUP);
 
+	//Setze den Echopin des Ultraschallsensors bzw. des Treiber als Eingang im Pullup-Netzwerk
 	pinMode(HC_Echopin, HCport, PULLUP);
 
+	//Interrupt Ausgang des PCF8574 als Pullup setzen. Ein Interrupt liegt vor (LOW), wenn sich Flanken der inputs des ports ändern)
 	pinMode(InterruptI2CFrontpin, InterruptI2CFrontport, PULLUP);
 
-	//AUSGÄNGE
+	//Orange LEDs auf dem Mainboard als Ausgang setzen
 	pinMode(LED0pin, yLEDport, OUTPUT);  //Wird gar nicht gebraucht..
 	pinMode(LED1pin, yLEDport, OUTPUT);
 	pinMode(LED2pin, yLEDport, OUTPUT);
@@ -110,15 +109,19 @@ void io_init(void) {   //PIN, PORT; MODE (PULLUP, PULLDOWN, OUTPUT)
 	pinMode(LED6pin, yLEDport, OUTPUT);
 	pinMode(LED7pin, yLEDport, OUTPUT);
 
+	//Triggerpin des Ultraschallsensors als Ausgang senden. Wenn positiver Impuls erfolgt, sendet dieser einen Burst aus.
 	pinMode(HC_Triggerpin, HCport, OUTPUT);
 
+	//Clock- und Datenleitung des TM1637 (Siebensegment) als Ausgang setzen
 	pinMode(Siebensegment_CLKpin, Siebensegmentport, OUTPUT);
 	pinMode(Siebensegment_DIOpin, Siebensegmentport, OUTPUT);
 
-	pinMode(RGB_R, RGB_Rport, OUTPUT);
-	pinMode(RGB_G, RGB_GBport, OUTPUT);
-	pinMode(RGB_B, RGB_GBport, OUTPUT);
+	//Alle 3 auf dem Board befindliche LEDs (R,G,B) als Ausgang schalten
+	pinMode(RGB_Rpin, RGB_Rport, OUTPUT);
+	pinMode(RGB_Gpin, RGB_GBport, OUTPUT);
+	pinMode(RGB_Bpin, RGB_GBport, OUTPUT);
 
+	//Piezo-Lautsprecher als Ausgang setzen
 	pinMode(Speakerpin, Speakerport, OUTPUT);   //Kein PWM möglich?
 }
 
@@ -140,11 +143,11 @@ void delay(volatile uint32_t dtime) {
  * Da ich aber den Zustand HIGH gerne als gedrückt interpretiere, wird der Rückgabewert von digitalRead hier negiert.
  * @return Zustand der Taster TA1-TA3
  */
-uint32_t getTAkeys() {   //Wenn Taster gedrückt -> digitalRead = LOW
+uint32_t getTAkeys() {                                   //Wenn Taster gedrückt -> digitalRead = LOW
 	uint32_t TAzustand = 0b000;
-	TAzustand |= ((!digitalRead(TA1pin, TAport)) << 0);
-	TAzustand |= ((!digitalRead(TA2pin, TAport)) << 1);
-	TAzustand |= ((!digitalRead(TA3pin, TAport)) << 2);
+	TAzustand |= ((!digitalRead(TA1pin, TAport)) << 0);  //LSB als Zustand für TA1
+	TAzustand |= ((!digitalRead(TA2pin, TAport)) << 1);  //Zweites Bit als Zustand für TA2
+	TAzustand |= ((!digitalRead(TA3pin, TAport)) << 2);  //MSB als Zustand für TA3
 	return TAzustand;
 }
 
@@ -173,24 +176,22 @@ uint32_t getTAkeys() {   //Wenn Taster gedrückt -> digitalRead = LOW
  */
 void TAkeyhandler(uint32_t *TAzustand, uint32_t *alrm_on, uint32_t *alrm_typ) {
 	switch (*TAzustand) {
-	case TA1:
-		*alrm_on = HIGH;
-		*alrm_typ = UNTER;
-		lcd_write_string_xy("unter", 6, 4);
-		set_rgb(RGB_R);
-		set_rgb(RGB_G);
+	case TA1:                                 //Wenn TA1 gedrückt wurde
+		*alrm_on = HIGH;                      //Alarm-Zustand auf einschalten setzen
+		*alrm_typ = UNTER;                    //Alarmtyp auf unterschreiten setzen
+		lcd_write_string_xy("unter", 6, 4);   //Schreibe "unter" in letzte Zeile des Displays (Anzeige Alarmtyp)
+		set_rgb(RGB_R | RGB_G);               //Rote und Grüne LED einschalten -> Gelb
 		break;
-	case TA2:
-		*alrm_on = HIGH;
-		*alrm_typ = UEBER;
-		lcd_write_string_xy("ueber", 6, 4);
-		set_rgb(RGB_AUS);
-		set_rgb(RGB_G);
+	case TA2:                                 //Wenn TA2 gedrückt wurde
+		*alrm_on = HIGH;                      //Alarm-Zustand auf einschalten setzen
+		*alrm_typ = UEBER;                    //Alarmtyp auf überschreiten setzen
+		lcd_write_string_xy("ueber", 6, 4);   //Schreibe "über" in letzte Zeile des Displays (Anzeige Alarmtyp)
+		set_rgb(RGB_G);                       //Grüne LED einschalten
 		break;
-	case TA3:
-		*alrm_on = LOW;
-		set_rgb(RGB_AUS);
-		lcd_write_string_xy(Leerzeile, 1, 4);
+	case TA3:                                 //Wenn TA3 gedrückt wurde
+		*alrm_on = LOW;                       //Alarm-Zustand auf ausschalten setzen
+		set_rgb(RGB_AUS);                     //Alle 3 (Rot,Grün,Blau) RGB-LEDs ausschalten
+		lcd_write_string_xy(Leerzeile, 1, 4); //Letzte Zeile von LC-Display löschen
 		break;
 	}
 }
@@ -211,17 +212,17 @@ void TAkeyhandler(uint32_t *TAzustand, uint32_t *alrm_on, uint32_t *alrm_typ) {
  */
 void Tkeyhandler(uint32_t *i2ckeys, uint32_t *zu_erf_abstand) {
 	switch (*i2ckeys) {
-	case T1:
-		*zu_erf_abstand = L1;
+	case T1:                             //Wenn T1 gedrückt wurde
+		*zu_erf_abstand = L1;            //Setze den nun zu erfassenden Abstand auf L1
 		break;
-	case T2:
-		*zu_erf_abstand = L2;
+	case T2:                             //Wenn T1 gedrückt wurde
+		*zu_erf_abstand = L2;            //Setze den nun zu erfassenden Abstand auf L2
 		break;
-	case T3:
-		*zu_erf_abstand = L3;
+	case T3:                             //Wenn T1 gedrückt wurde
+		*zu_erf_abstand = L3;            //Setze den nun zu erfassenden Abstand auf L3
 		break;
-	case T4:
-		*zu_erf_abstand = RESET_DATA;
+	case T4:                             //Wenn T1 gedrückt wurde
+		*zu_erf_abstand = RESET_DATA;    //Setze den nun zu erfassenden Abstand auf RESET_DATA (alle gemessenen Abstände löschen)
 		break;
 	default:
 		break;
@@ -257,106 +258,122 @@ void Tkeyhandler(uint32_t *i2ckeys, uint32_t *zu_erf_abstand) {
 void lcdhandler(uint32_t *zustand, uint32_t *abstand, uint32_t *ZustandI2CLEDs) {
 
 	switch (*zustand) {
-	case L1:
-		lcd_write_string_xy(Leerzeile, 1, 1);
-		*ZustandI2CLEDs &= I2CLED1;
+	case L1:                                   //Wenn der zu erfassende Abstand L1 ist
+		lcd_write_string_xy(Leerzeile, 1, 1);  //Erste Zeile des LC-Displays löschen
+		*ZustandI2CLEDs &= I2CLED1;            //Bit für Frontpanel LED1 setzen (einschalten)
 		lcd_write_string_xy("L1=", 1, 1);
 		lcd_write_uint(abstand[L1], 4);
 		lcd_write_string_xy("cm", 8, 1);
-		break;
+		//	break;                             //Kein break, da nun auch der Flächeninhalt aktualisiert werden soll
 	case L2:
-		lcd_write_string_xy(Leerzeile, 1, 2);
-		*ZustandI2CLEDs &= I2CLED2;
-		lcd_write_string_xy("L2=", 1, 2);
-		lcd_write_uint(abstand[L2], 4);
-		lcd_write_string_xy("cm, A=", 8, 2);
-		uint32_t flaecheninhaltcm = abstand[L1] * abstand[L2],
-				flaecheninhaltqm = flaecheninhaltcm / 10000, _flaecheninhaltcm =
-						flaecheninhaltcm, _flaecheninhaltqm = flaecheninhaltqm,
-				anzStellencm = 0, anzStellenqm = 0;
+		if (abstand[L2] != 0) {                      //Nur die zweite Zeile beschreiben, wenn vorher ein Wert ermittelt wurde
+			lcd_write_string_xy(Leerzeile, 1, 2);
+			*ZustandI2CLEDs &= I2CLED2;              //Bit für Frontpanel LED2 setzen (einschalten)
+			lcd_write_string_xy("L2=", 1, 2);
+			lcd_write_uint(abstand[L2], 4);
+			lcd_write_string_xy("cm, A=", 8, 2);
+			uint32_t flaecheninhaltcm = abstand[L1] * abstand[L2],
+					flaecheninhaltqm = flaecheninhaltcm / 10000,
+					_flaecheninhaltcm = flaecheninhaltcm, _flaecheninhaltqm =
+							flaecheninhaltqm, anzStellencm = 0,
+					anzStellenqm = 0;
 
-		while (_flaecheninhaltcm != 0) { //Erhalte Anzahl der ganzen Stellen von dem Flächeninhalt in cm2
-			_flaecheninhaltcm = _flaecheninhaltcm / 10;
-			anzStellencm++;
-		}
+			while (_flaecheninhaltcm != 0) {                 //Erhalte Anzahl der ganzen Stellen von dem Flächeninhalt in cm2
+				_flaecheninhaltcm = _flaecheninhaltcm / 10;
+				anzStellencm++;
+			}
 
-		while (_flaecheninhaltqm != 0) { //Erhalte Anzahl der ganzen Stellen von dem Flächeninhalt in m2
-			_flaecheninhaltqm = _flaecheninhaltqm / 10;
-			anzStellenqm++;
-		}
+			while (_flaecheninhaltqm != 0) {                 //Erhalte Anzahl der ganzen Stellen von dem Flächeninhalt in m2
+				_flaecheninhaltqm = _flaecheninhaltqm / 10;
+				anzStellenqm++;
+			}
 
-		if (flaecheninhaltqm == 0) {  //Wenn Flächeninhalt <1qm
-			lcd_write_string_xy("0.", 14, 2);
-			lcd_write_uint(flaecheninhaltcm, 2);
+			if (flaecheninhaltqm == 0) {                            //Wenn Flächeninhalt <1qm
+				uint32_t _anzStellencm = anzStellencm, stelle = 0;
+				lcd_write_string_xy("0.", 14, 2);
+				while (_anzStellencm < 4) {                         //Fülle Nullen nach dem Komma, bis insgesamt 3 Stellen nach dem Komma dargestellt werden -> 123cm2 -> 0.012m2
+					lcd_write_string_xy("0", 16 + stelle, 2);       //16 ist die erste Stelle nach dem "0."
+					stelle++;
+					_anzStellencm++;
+				}                                                   //Anzahl der Stellen-2 entspricht immer der Anzahl der darzustellenden Zahlen
+				lcd_write_uint(flaecheninhaltcm, anzStellencm - 2); //1234cm2(4 Stellen) -> 0,12m2(2 Stellen) bzw. 123cm2(3 Stellen) -> 0,01m2(1 Stelle)
 
-		} else {                                      //Wenn Flächeninhalt >1qm
-			lcd_write_uint(flaecheninhaltqm, anzStellenqm); //Schreibe erste Zahlen vom Flächeninhalt in m2
-			if (anzStellenqm < 3) {
-				lcd_write_string_xy(".", 14 + anzStellenqm, 2); //Setze . nach den ganzen Zahlen
+			} else {                                                //Wenn Flächeninhalt >1qm
+				lcd_write_uint(flaecheninhaltqm, anzStellenqm);     //Schreibe erste Zahlen vom Flächeninhalt in m2
+				if (anzStellenqm < 3) {
+					lcd_write_string_xy(".", 14 + anzStellenqm, 2); //Setze "." nach den ganzen Zahlen
 
-				while (anzStellencm > 3) { //Teile so lange die Zahl durch 10, bis 3 Ziffern erhalten
-					flaecheninhaltcm = flaecheninhaltcm / 10;
-					anzStellencm--;
-				}
+					while (anzStellencm > 3) {                      //Teile so lange den Flächeninhalt (cm2) durch 10, bis die Zahl nur noch aus 3 Ziffern besteht
+						flaecheninhaltcm = flaecheninhaltcm / 10;
+						anzStellencm--;
+					}
 
-				uint32_t i = 0;
-				while (anzStellenqm < 3) {
-					lcd_gotoxy(17 - i, 2); //Setze Cursor auf die letzte zu beschreibende Position für Ziffer
-					lcd_write_uint(flaecheninhaltcm % 10, 1); //Schreibe letzte Ziffer auf Display
-					flaecheninhaltcm = flaecheninhaltcm / 10; //Teile durch 10, um nächste Ziffer zu erhalten
-					anzStellenqm++;
-					i++;
+					uint32_t i = 0;
+					while (anzStellenqm < 3) {                     //3 Stellen darstellen (4 mit Punkt)
+						lcd_gotoxy(17 - i, 2);                     //Setze Cursor auf die letzte zu beschreibende Position für Ziffer
+						lcd_write_uint(flaecheninhaltcm % 10, 1);  //Schreibe letzte Ziffer auf Display
+						flaecheninhaltcm = flaecheninhaltcm / 10;  //Teile durch 10, um nächste Ziffer zu erhalten
+						anzStellenqm++;
+						i++;
+					}
 				}
 			}
+			lcd_write_string_xy("qm", 19, 2);
 		}
-		lcd_write_string_xy("qm", 19, 2);
-
-		break;
+		//break;                              //Kein break, da nun auch das Volumen aktualisiert werden soll
 	case L3:
-		lcd_write_string_xy(Leerzeile, 1, 3);
-		*ZustandI2CLEDs &= I2CLED3;
-		lcd_write_string_xy("L3=", 1, 3);
-		lcd_write_uint(abstand[L3], 4);
-		lcd_write_string_xy("cm, V=", 8, 3);
-		uint32_t volumenccm = abstand[L1] * abstand[L2] * abstand[L3],
-				volumencbm = volumenccm / 1000000, _volumenccm = volumenccm,
-				_volumencbm = volumencbm, anzStellenccm = 0, anzStellencbm = 0;
+		if (abstand[L3] != 0) {                              //analog zu L2
+			lcd_write_string_xy(Leerzeile, 1, 3);
+			*ZustandI2CLEDs &= I2CLED3;
+			lcd_write_string_xy("L3=", 1, 3);
+			lcd_write_uint(abstand[L3], 4);
+			lcd_write_string_xy("cm, V=", 8, 3);
+			uint32_t volumenccm = abstand[L1] * abstand[L2] * abstand[L3],
+					volumencbm = volumenccm / 1000000, _volumenccm = volumenccm,
+					_volumencbm = volumencbm, anzStellenccm = 0, anzStellencbm =
+							0;
 
-		while (_volumenccm != 0) { //Erhalte Anzahl der ganzen Stellen von dem Volumen in cm3
-			_volumenccm = _volumenccm / 10;
-			anzStellenccm++;
-		}
+			while (_volumenccm != 0) {            //Erhalte Anzahl der ganzen Stellen von dem Volumen in cm3
+				_volumenccm = _volumenccm / 10;
+				anzStellenccm++;
+			}
 
-		while (_volumencbm != 0) { //Erhalte Anzahl der ganzen Stellen von dem Volumen in m3
-			_volumencbm = _volumencbm / 10;
-			anzStellencbm++;
-		}
+			while (_volumencbm != 0) {            //Erhalte Anzahl der ganzen Stellen von dem Volumen in m3
+				_volumencbm = _volumencbm / 10;
+				anzStellencbm++;
+			}
 
-		if (volumencbm == 0) {  //Wenn Volumen <1m3
-			lcd_write_string_xy("0.", 14, 3);
-			lcd_write_uint(volumenccm/1000, 3);
-
-		} else {                                      //Wenn Volumen >1m3
-			lcd_write_uint(volumencbm, anzStellencbm); //Schreibe erste Zahlen vom Volumen in m3
-			if (anzStellencbm < 3) {
-				lcd_write_string_xy(".", 14 + anzStellencbm, 3); //Setze . nach den ganzen Zahlen
-
-				while (anzStellenccm > 3) { //Teile so lange die Zahl durch 10, bis 3 Ziffern erhalten
-					volumenccm = volumenccm / 10;
-					anzStellenccm--;
+			if (volumencbm == 0) {                //Wenn Volumen <1m3
+				uint32_t _anzStellenccm = anzStellenccm, stelle = 0;
+				lcd_write_string_xy("0.", 14, 3);
+				while (_anzStellenccm < 6) {
+					lcd_write_string_xy("0", 16 + stelle, 3);
+					stelle++;
+					_anzStellenccm++;
 				}
+				lcd_write_uint(volumenccm / 1000, anzStellenccm - 4);
+			} else {                                                     //Wenn Volumen >1m3
+				lcd_write_uint(volumencbm, anzStellencbm);               //Schreibe erste Zahlen vom Volumen in m3
+				if (anzStellencbm < 3) {
+					lcd_write_string_xy(".", 14 + anzStellencbm, 3);     //Setze "." nach den ganzen Zahlen
 
-				uint32_t i = 0;
-				while (anzStellencbm < 3) {
-					lcd_gotoxy(17 - i, 3); //Setze Cursor auf die letzte zu beschreibende Position für Ziffer
-					lcd_write_uint(volumenccm % 10, 1); //Schreibe letzte Ziffer auf Display
-					volumenccm = volumenccm / 10; //Teile durch 10, um nächste Ziffer zu erhalten
-					anzStellencbm++;
-					i++;
+					while (anzStellenccm > 3) {                          //Teile so lange die Zahl durch 10, bis 3 Ziffern erhalten
+						volumenccm = volumenccm / 10;
+						anzStellenccm--;
+					}
+
+					uint32_t i = 0;
+					while (anzStellencbm < 3) {
+						lcd_gotoxy(17 - i, 3);                //Setze Cursor auf die letzte zu beschreibende Position für Ziffer
+						lcd_write_uint(volumenccm % 10, 1);   //Schreibe letzte Ziffer auf Display
+						volumenccm = volumenccm / 10;         //Teile durch 10, um nächste Ziffer zu erhalten
+						anzStellencbm++;
+						i++;
+					}
 				}
 			}
+			lcd_write_string_xy("cbm", 18, 3);
 		}
-		lcd_write_string_xy("cbm", 18, 3);
 		break;
 	case RESET_DATA:
 		lcd_write_string_xy("Reset? T3: JA", 1, 4);
@@ -367,19 +384,19 @@ void lcdhandler(uint32_t *zustand, uint32_t *abstand, uint32_t *ZustandI2CLEDs) 
 			key = getTkeys();
 		} while (key == 0b1111);         //Warte bis eine Eingabe erfolgte
 
-		if (key == T3) {
-			abstand[L1] = 0;
+		if (key == T3) {                 //Wenn T3 gedrückt wurde
+			abstand[L1] = 0;             //Lösche alle gespeicherten Abstände
 			abstand[L2] = 0;
 			abstand[L3] = 0;
-			lcd_clrscr();
-			clrSegments();
-			*ZustandI2CLEDs = CLR_I2CLED;
+			lcd_clrscr();                //Lösche LC-Display Anzeige
+			clrSegments();               //Lösche alle Segmente der Siebensegmentanzeige
+			*ZustandI2CLEDs = CLR_I2CLED;//Lösche Frontpanel-LEDs
 		}
 
-		lcd_write_string_xy(Leerzeile, 1, 4);
+		lcd_write_string_xy(Leerzeile, 1, 4); //Lösche letzte Zeile des LC-Displays
 		break;
-	case L1_1:
-		lcd_write_string_xy("ALRM:", 1, 4);
+	case L1_1:                               //Alarmzustand AKTIV
+		lcd_write_string_xy("ALRM:", 1, 4);  //Alarmtyp wird von "TAkeyhandler" geschrieben
 		lcd_write_string_xy("L1=", 12, 4);
 		lcd_write_uint(abstand[L1_1], 4);
 		lcd_write_string_xy("cm", 19, 4);
@@ -387,7 +404,7 @@ void lcdhandler(uint32_t *zustand, uint32_t *abstand, uint32_t *ZustandI2CLEDs) 
 	default:
 		break;
 	}
-	writeFrontLED(*ZustandI2CLEDs);
+	writeFrontLED(*ZustandI2CLEDs);     //Setze Frontpanel-LEDs je nach Zustand
 }
 /**
  * \brief <b>Funktion um Abstand zu speichern und diesen am Siebensegment und auf dem Display anzuzeigen. <br>
@@ -400,9 +417,9 @@ void lcdhandler(uint32_t *zustand, uint32_t *abstand, uint32_t *ZustandI2CLEDs) 
  * @param ZustandFrontLEDs Zustand der Frontpanel-LEDs
  */
 void saveDistance(uint32_t *abstande, uint32_t *zu_erf_abstand, uint32_t *ZustandFrontLEDs) {
-	abstande[*zu_erf_abstand] = getDistance(); //Rückgabewert ist die Entfernung mit Gehäusetiefe
-	setinttoSegment(abstande[*zu_erf_abstand]); //Jetzt auf das Siebensegment mappen
-	lcdhandler(zu_erf_abstand, abstande, ZustandFrontLEDs);
+	abstande[*zu_erf_abstand] = getDistance();                //Rückgabewert ist die Entfernung mit Gehäusetiefe
+	setinttoSegment(abstande[*zu_erf_abstand]);               //Jetzt auf das Siebensegment mappen
+	lcdhandler(zu_erf_abstand, abstande, ZustandFrontLEDs);   //Nun LC-Display beschreiben
 }
 
 /**
@@ -411,7 +428,7 @@ void saveDistance(uint32_t *abstande, uint32_t *zu_erf_abstand, uint32_t *Zustan
  * Einstellungen sind in der main.h zu finden.
  */
 void writeSpeaker() {
-	for (uint32_t i = startwert; i < abtastzeit; i++) {
+	for (uint32_t i = startwert; i < abtastzeit; i++) {    //._.__.___.____.____.___.__._ erzeugen (_ entspricht Einschaltdauer)
 		digitalWrite(Speakerpin, Speakerport, HIGH);
 		uint32_t k = kstartwert;
 		while (k < i) {
@@ -452,22 +469,22 @@ void writeSpeaker() {
  * @param abstande Array beinhaltet alle gemessenden Abstände
  * @param alarmtyp Alarmtyp, der vom User gewählt wurde
  */
-void distanzalarmHandler(uint32_t *abstande, uint32_t *alarmtyp) {
+void distanzalarmHandler(uint32_t *abstande, uint32_t *alarmtyp) {  //Hier möglich eine Variable zu erstellen, die bei erfüllten if Abfragen gesetzt wird..
 	switch (*alarmtyp) {
-	case UNTER:  //TA1 wurde gedrueckt
-		if (abstande[L1_1] < abstande[L1]) {
-			writei2cRedLED(i2cRoteLEDsAN);
+	case UNTER:                                //TA1 wurde gedrueckt
+		if (abstande[L1_1] < abstande[L1]) {   //Wenn der aktuell gemessende Abstand kleiner ist als der gespeicherte Wert L1
+			writei2cRedLED(i2cRoteLEDsAN);     //8 rote LEDs (von links) auf dem Mainboard einschalten
 			delay(200);
-			writei2cRedLED(i2cRoteLEDsAUS);
-			writeSpeaker();
+			writei2cRedLED(i2cRoteLEDsAUS);    //8 rote LEDs (von links) auf dem Mainboard ausschalten
+			writeSpeaker();                    //Tonsignal erzeugen
 		}
 		break;
-	case UEBER: //TA2 wurde gedrueckt
-		if (abstande[L1_1] > abstande[L1]) {
-			writei2cRedLED(i2cRoteLEDsAN);
+	case UEBER:                                //TA2 wurde gedrueckt
+		if (abstande[L1_1] > abstande[L1]) {   //Wenn der aktuell gemessende Abstand größer ist als der gespeicherte Wert L1
+			writei2cRedLED(i2cRoteLEDsAN);     //8 rote LEDs (von links) auf dem Mainboard einschalten
 			delay(200);
-			writei2cRedLED(i2cRoteLEDsAUS);
-			writeSpeaker();
+			writei2cRedLED(i2cRoteLEDsAUS);    //8 rote LEDs (von links) auf dem Mainboard ausschalten
+			writeSpeaker();                    //Tonsignal erzeugen
 		}
 		break;
 	default:
@@ -503,50 +520,50 @@ void distanzalarmHandler(uint32_t *abstande, uint32_t *alarmtyp) {
 int main(void) {
 	//uint32_t clock = SystemCoreClock; //Um CCLK zu bekommen..
 
-	uint32_t zu_erf_abstand = L1, i2ckeys = 0b1111, zi2ckeys = 0b1111, TAkeys =
-			0b000, zTAkeys = 0b000, alrm_on = LOW, alrm_typ =
+	uint32_t zu_erf_abstand = L1, i2ckeys = Tnokey, zi2ckeys = Tnokey, TAkeys =
+	TAnokey, zTAkeys = TAnokey, alrm_on = LOW, alrm_typ =
 	UNTER, ZustandFrontLEDs = CLR_I2CLED;
 	uint32_t abstande[5] = { 0, 0, 0, 0, 0 };
 
-	i2c_init(I2C_SM);
-	lcd_init(4, I2C_SM);
-	lcd_cursor(2);
-	writei2cRedLED(i2cRoteLEDsAUS);
-	io_init(); //I/O-Ports initialisieren
-	clrSegments();
-	writeFrontLED(CLR_I2CLED);
-	set_rgb(RGB_AUS);
-	timer_init();
+	i2c_init(I2C_SM);                //i2c initialisieren im Standard-Mode
+	lcd_init(4, I2C_SM);             //LCD intialisieren im Standard-Mode
+	lcd_cursor(2);                   //Cursor vom LC-Display auf Unterstrich setzen
+	writei2cRedLED(i2cRoteLEDsAUS);  //Rote LEDs des Mainboards ausschalten
+	io_init();                       //I/O-Ports initialisieren
+	clrSegments();                   //Alle Segmente der Siebensegmente ausschalten
+	writeFrontLED(CLR_I2CLED);       //Frontpanel-LEDs ausschalten
+	set_rgb(RGB_AUS);                //Auf dem Board befindliche RGB-LED ausschalten
+	timer_init();                    //RIT initialisieren
 
 	while (1) {
-		i2ckeys = getTkeys();
-		TAkeys = getTAkeys();
+		i2ckeys = getTkeys();  //Erhalte Zustand von T1-T4
+		TAkeys = getTAkeys();  //Erhalte Zustand von TA1-TA3
 
-		if ((i2ckeys != zi2ckeys) && (i2ckeys != 0b1111)) {
+		if ((i2ckeys != zi2ckeys) && (i2ckeys != Tnokey)) {  //Wenn Zustand von T1-T4 geändert
 			Tkeyhandler(&i2ckeys, &zu_erf_abstand);
 
-			if ((zu_erf_abstand == L1)
-					|| ((zu_erf_abstand == L2) && (abstande[L1] != 0))
-					|| ((zu_erf_abstand == L3) && (abstande[L2] != 0))) {
+			if ((zu_erf_abstand == L1)                                    //Wenn L1 gemessen werden soll
+					|| ((zu_erf_abstand == L2) && (abstande[L1] != 0))    //Wenn L2 gemessen werden soll und L1 schon gemessen wurde
+					|| ((zu_erf_abstand == L3) && (abstande[L2] != 0))) { //Wenn L3 gemessen werden soll und L2 schon gemessen wurde
 				saveDistance(abstande, &zu_erf_abstand, &ZustandFrontLEDs);
 			}
 
-			if (zu_erf_abstand == RESET_DATA)
+			if (zu_erf_abstand == RESET_DATA)  //Wenn die gespeicherten Abstände gelöscht werden sollen, T4 gedrückt
 				lcdhandler(&zu_erf_abstand, abstande, &ZustandFrontLEDs);
 		}
 
-		if (((TAkeys != zTAkeys) && (TAkeys != 0b000) && (abstande[L1] != 0))
+		if (((TAkeys != zTAkeys) && (TAkeys != TAnokey) && (abstande[L1] != 0))   //Wenn Zustand von TA1-TA3 geändert, oder Alarmzustand aktiv
 				|| alrm_on == HIGH) {
 			TAkeyhandler(&TAkeys, &alrm_on, &alrm_typ);
-			if (alrm_on == HIGH) {
+			if (alrm_on == HIGH) {      //Wenn Alarmzustand aktiv
 				zu_erf_abstand = L1_1;
 				saveDistance(abstande, &zu_erf_abstand, &ZustandFrontLEDs);
 				distanzalarmHandler(abstande, &alrm_typ);
 			}
 		}
 
-		zi2ckeys = i2ckeys;
-		zTAkeys = TAkeys;
+		zi2ckeys = i2ckeys;  //Speichere letzten Zustand der Taster T1-T4
+		zTAkeys = TAkeys;    //Speichere letzten Zustand der Taster TA1-TA3
 		delay(10);
 	}
 

@@ -5,21 +5,14 @@
 #ifndef GPIO_H_
 #define GPIO_H_
 
-static LPC_GPIO_TypeDef (*const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1,
-		LPC_GPIO2, LPC_GPIO3, LPC_GPIO4 };
-/*
- struct GPIO {
- unsigned int port;
- unsigned int bit;
- unsigned int offset;
- };
- */
-//MAKROS FÜR io_init
+static LPC_GPIO_TypeDef (*const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO2, LPC_GPIO3, LPC_GPIO4 }; //Um LPC_GPIO[port] zu verwenden
+
+//MAKROS FÜR pinMode (Bitkombination um PINMODE zu setzen)
 #define PULLUP 0b00
 #define OUTPUT 0b10
 #define PULLDOWN 0b11
 
-//MAKROS FÜR GPIO
+//Allgemeine Makros
 #define LOW 0
 #define HIGH 1
 
@@ -31,7 +24,7 @@ static LPC_GPIO_TypeDef (*const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1,
 
 //Ultraschallsensor
 #define HC_Triggerpin 0   //Triggersignal für Ultraschallsensor
-#define HC_Echopin 1   //Echosignal vom Ultraschallsensor
+#define HC_Echopin 1      //Echosignal vom Ultraschallsensor
 #define HCport 0
 
 //4 Stelliges 7segment Display mit TM1637
@@ -51,20 +44,20 @@ static LPC_GPIO_TypeDef (*const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1,
 #define LED7pin 8
 
 //RGB-LED auf Mainboard
-#define RGB_R 22    //ROT
+#define RGB_Rpin 22    //ROT
 #define RGB_Rport 0
-#define RGB_G 25    //GRÜN
-#define RGB_B 26    //BLAU
+#define RGB_Gpin 25    //GRÜN
+#define RGB_Bpin 26    //BLAU
 #define RGB_GBport 3
-#define RGB_EIN 0  //Zustand für RGB einschalten
-#define RGB_AUS 1  //Zustand für RGB ausschalten
+#define RGB_R 0b001    //Bitkodierung für die rote RGB LED
+#define RGB_G 0b010    //Bitkodierung für die grüne RGB LED
+#define RGB_B 0b100    //Bitkodierung für die blaue RGB LED
+#define RGB_AUS 0      //Zustand für RGB ausschalten
 
 //Lautsprecher
 #define Speakerpin 9
 #define Speakerport 0
 
-#define InterruptI2CFrontpin 13
-#define InterruptI2CFrontport 2
 
 //PROTOTYPEN
 void pinMode(uint32_t pin, uint32_t portnr, uint32_t mode);

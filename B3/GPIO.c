@@ -22,25 +22,25 @@
  * @param mode Mode der gesetzt werden soll; PULLUP, PULLDOWN, OUTPUT
  */
 void pinMode(uint32_t pin, uint32_t portnr, uint32_t mode) {
-	unsigned int bit = 1 << pin; //Um die 1 zu schieben..
-	unsigned int dbl_pin = (bit << (pin + 1)) + bit; //Aus z.B. 10 -> 10 10; Wird für PINSEL und PINMODE benötigt
-	dbl_pin = dbl_pin << 2 * pin; //Aus z.B. x<<3 -> x<<6; Wird für PINSEL und PINMODE benötigt
+	unsigned int bit = 1 << pin;                      //Um die 1 zu schieben..
+	unsigned int dbl_pin = (bit << (pin + 1)) + bit;  //Aus z.B. 10 -> 10 10; Wird für PINSEL und PINMODE benötigt
+	dbl_pin = dbl_pin << 2 * pin;                     //Aus z.B. x<<3 -> x<<6; Wird für PINSEL und PINMODE benötigt
 
 	switch (portnr) {
 	case 0:
 		if (pin <= 15) {
-			LPC_PINCON->PINSEL0 &= ~(dbl_pin);     //Als GPIOs setzen -> Bits 00
-			LPC_PINCON->PINMODE0 &= ~(dbl_pin);          //Erstmal Bits löschen
-			LPC_PINCON->PINMODE0 |= mode << (pin * 2);        //Pinmode setzen
+			LPC_PINCON->PINSEL0 &= ~(dbl_pin);          //Als GPIOs setzen -> Bits 00
+			LPC_PINCON->PINMODE0 &= ~(dbl_pin);         //Erstmal Bits löschen
+			LPC_PINCON->PINMODE0 |= mode << (pin * 2);  //Pinmode setzen -> Pullup, Pulldown, Output ...
 		} else if (pin <= 31) {
 			LPC_PINCON->PINSEL1 &= ~(dbl_pin);
 			LPC_PINCON->PINMODE1 &= ~(dbl_pin);
 			LPC_PINCON->PINMODE1 |= mode << (pin * 2);
 		}
 		if (mode == OUTPUT)
-			LPC_GPIO0->FIODIR |= (1 << pin);
+			LPC_GPIO0->FIODIR |= (1 << pin);            //Richtung des GPIO-Portpins auf Ausgang setzen
 		else
-			LPC_GPIO0->FIODIR &= ~(1 << pin);
+			LPC_GPIO0->FIODIR &= ~(1 << pin);           //Richtung des GPIO-Portpins auf Eingang setzen
 		break;
 
 	case 1:
@@ -116,10 +116,10 @@ void pinMode(uint32_t pin, uint32_t portnr, uint32_t mode) {
  * @param set Pin auf HIGH/LOW setzen
  */
 void digitalWrite(uint32_t pin, uint32_t port, uint32_t set) {
-	if (set == HIGH)
+	if (set == HIGH)                           //Wenn Ausgang HIGH geschaltet werden soll
 		LPC_GPIO[port]->FIOSET = (1 << pin);
 	else
-		LPC_GPIO[port]->FIOCLR = (1 << pin);
+		LPC_GPIO[port]->FIOCLR = (1 << pin);   //Wenn Ausgang LOW geschaltet werden soll
 }
 
 /**
@@ -133,13 +133,16 @@ void digitalWrite(uint32_t pin, uint32_t port, uint32_t set) {
 uint32_t digitalRead(uint32_t pin, uint32_t port) {
 	uint32_t var;
 
-	var = LPC_GPIO[port]->FIOPIN; //Alle Zustände von GPIO[*port] einlesen (32bit)
-	var &= (1 << pin); //Nur den einen Zustand am Pin auslesen
+	var = LPC_GPIO[port]->FIOPIN;    //Alle Zustände von GPIO[*port] einlesen (32bit)
+	var &= (1 << pin);               //Nur den einen Zustand am Pin auslesen
+	var = var >> pin;                //Gesuchtes Bit zum LSB machen
 
+	/*  //Nicht benötigt, da ich nun das gesuchte Bit zum LSB mache
 	if (var > 0)
 		var = HIGH;
 	else
 		var = LOW;
+*/
 
 	return var;
 }
@@ -148,24 +151,20 @@ uint32_t digitalRead(uint32_t pin, uint32_t port) {
  * \brief <b>RGB-LEDs auf dem Maiboard setzen</b> <br>
  *  @param rgb_led Die zu setzende LED - RGB_AUS schaltet alle 3 LEDs aus
  */
-void set_rgb(uint32_t rgb_led) {
-	switch (rgb_led) {
-	case RGB_AUS:
-		digitalWrite(RGB_R, RGB_Rport, RGB_AUS);
-		digitalWrite(RGB_G, RGB_GBport, RGB_AUS);
-		digitalWrite(RGB_B, RGB_GBport, RGB_AUS);
-		break;
-	case RGB_R:
-		digitalWrite(RGB_R, RGB_Rport, RGB_EIN);
-		break;
-	case RGB_G:
-		digitalWrite(RGB_G, RGB_GBport, RGB_EIN);
-		break;
-	case RGB_B:
-		digitalWrite(RGB_B, RGB_GBport, RGB_EIN);
-		break;
-	default:
-		break;
+void set_rgb(uint32_t rgb_led) {      //Übergabewert besteht aus 3 bits -> 0bxxx -> Wobei jede Bit für eine LED steht
+	digitalWrite(RGB_Rpin, RGB_Rport, HIGH);
+	digitalWrite(RGB_Gpin, RGB_GBport, HIGH);
+	digitalWrite(RGB_Bpin, RGB_GBport, HIGH);
+
+	if(rgb_led & RGB_R) {
+		digitalWrite(RGB_Rpin, RGB_Rport, LOW);
 	}
 
+	if (rgb_led & RGB_G) {
+		digitalWrite(RGB_Gpin, RGB_GBport, LOW);
+	}
+
+	if (rgb_led & RGB_B) {
+		digitalWrite(RGB_Bpin, RGB_GBport, LOW);
+	}
 }
