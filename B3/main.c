@@ -45,6 +45,7 @@
  *	<b>pinMode:</b> Setze den zu übergebenden Pin (+Portangabe) als PULLUP, PULLDOWN oder als OUTPUT. <br>
  *	<b>digitalWrite:</b> Setze den zu übergebenden Pin (+Portangabe) in den Zustand HIGH oder in LOW. <br>
  *	<b>digitalRead:</b> Erhalte den Zustand des zu übergebenden Pins (+Portangabe) als Rückgabewert. <br>
+ ** <b>set_rgb:</b> Setze die zu übergebende RGB, welche auf dem Mainboard installiert ist. RGB_AUS schaltet alle 3 LEDs aus. <br>
  **
  *	<b><u>PCF8574 (8-Bit-Portexpander, I2C <-> parallel)</u></b> <br>
  *	<b>getTkeys:</b> Zustand von T1 bis T4 einlesen und an aufrufende Funktion übergeben. <br>
