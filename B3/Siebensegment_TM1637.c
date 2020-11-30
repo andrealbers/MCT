@@ -126,7 +126,7 @@ void clrSegments() {
 
 	for (int i = 0; i < 4; i++) {
 		startComm();
-		writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden, ack = 0, wenn erfolgreich
+		writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden
 		stopComm();
 
 		startComm();
@@ -161,7 +161,7 @@ void clrSegment(uint32_t segmentnr) {
 	//uint32_t ack = 1;
 
 	startComm();
-	writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden, ack = 1, wenn erfolgreich
+	writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden
 	stopComm();
 
 	startComm();

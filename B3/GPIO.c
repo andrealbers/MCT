@@ -22,9 +22,10 @@
  * @param mode Mode der gesetzt werden soll; PULLUP, PULLDOWN, OUTPUT
  */
 void pinMode(uint32_t pin, uint32_t portnr, uint32_t mode) {
-	unsigned int bit = 1 << pin;                      //Um die 1 zu schieben..
-	unsigned int dbl_pin = (bit << (pin + 1)) + bit;  //Aus z.B. 10 -> 10 10; Wird für PINSEL und PINMODE benötigt
-	dbl_pin = dbl_pin << 2 * pin;                     //Aus z.B. x<<3 -> x<<6; Wird für PINSEL und PINMODE benötigt
+	uint32_t dbl_pin = 1 << (2 * pin);    //1 << 6 -> 1 << 12
+	dbl_pin |= 1 << ((2*pin)+1);          //1 << 12 -> 1 << 12, 1 << 13
+
+	//uint32_t dbl_pin = (bit << (pin + 1)) + bit;  //Aus z.B. 10 -> 10 10; Wird für PINSEL und PINMODE benötigt
 
 	switch (portnr) {
 	case 0:
@@ -133,7 +134,7 @@ void digitalWrite(uint32_t pin, uint32_t port, uint32_t set) {
 uint32_t digitalRead(uint32_t pin, uint32_t port) {
 	uint32_t var;
 
-	var = LPC_GPIO[port]->FIOPIN;    //Alle Zustände von GPIO[*port] einlesen (32bit)
+	var = LPC_GPIO[port]->FIOPIN;    //Alle Zustände von GPIO[port] einlesen (32bit)
 	var &= (1 << pin);               //Nur den einen Zustand am Pin auslesen
 	var = var >> pin;                //Gesuchtes Bit zum LSB machen
 
@@ -152,10 +153,12 @@ uint32_t digitalRead(uint32_t pin, uint32_t port) {
  *  @param rgb_led Die zu setzende LED - RGB_AUS schaltet alle 3 LEDs aus
  */
 void set_rgb(uint32_t rgb_led) {      //Übergabewert besteht aus 3 bits -> 0bxxx -> Wobei jede Bit für eine LED steht
+	//Alle 3 LEDs ausschalten
 	digitalWrite(RGB_Rpin, RGB_Rport, HIGH);
 	digitalWrite(RGB_Gpin, RGB_GBport, HIGH);
 	digitalWrite(RGB_Bpin, RGB_GBport, HIGH);
 
+	//Jeweilige RGB einschalten
 	if(rgb_led & RGB_R) {
 		digitalWrite(RGB_Rpin, RGB_Rport, LOW);
 	}

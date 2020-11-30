@@ -16,10 +16,8 @@
  * @param zahl Zahl die gerundet werden soll
  * @return Gerundete Zahl
  */
-uint32_t runden(float zahl) {
-	if(zahl>0) return (int)(zahl+0.5);
-
-	return (int)(zahl-0.5);
+uint32_t runden(float zahl) {   //zahl z.B. 123,7cm
+	return (int)(zahl+0.5);     //Zu float 0.5 addieren und als int zurückgeben
 }
 
 /**
@@ -40,7 +38,7 @@ uint32_t runden(float zahl) {
  */
 uint32_t getDistance(void) {             //Schallgeschwindigkeit in Luft bei 20°C -> 343m/s -> 34,3cm/ms
 	uint32_t duration[6] = { 0, 0, 0, 0, 0, 0 };
-	float mittelDuration = 0, usDuration = 0, distance = 0;
+	float mittelDuration = 0.0, usDuration = 0.0, distance = 0.0;
 /*
 	LPC_SC->PCONP |= PCRIT;          //Peripherie aktivieren
 	LPC_SC->PCLKSEL1 &= ~(0b11 << 26);  //Erst löschen
@@ -71,8 +69,8 @@ uint32_t getDistance(void) {             //Schallgeschwindigkeit in Luft bei 20�
 	}
 	mittelDuration = duration[5] / 5;             //Mittelwert bestimmen
 	mittelDuration = mittelDuration / 2;          //Nur Signallaufzeit hin bzw. zurück
-	usDuration = ((float) mittelDuration) * (10.0 / 1000.0);  //Zeit in us die gebraucht wurde für hin bzw zurück
-	distance = usDuration * ((schallgeschwindigkeit * 100.0) / 1000000.0);   //Abstand in cm Hin bzw Zurück
+	usDuration = ((float) mittelDuration) * (10.0 / 1000.0);  //Zeit in us die gebraucht wurde für hin bzw zurück (1/10ns) * (10ns/1000ns) -> µs
+	distance = usDuration * ((schallgeschwindigkeit * 100.0) / 1000000.0);   //Schallgeschwindigkeit in m/s, Abstand in cm Hin bzw Zurück
 //	distance = distance * 10;  //Ausgabe in mm..
 
 	uint32_t rnd_abstand = runden(distance);

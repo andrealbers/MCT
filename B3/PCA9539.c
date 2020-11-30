@@ -31,21 +31,21 @@ void writei2cRedLED(uint32_t setleds) {
 		//Pins des Port Expanders als Eingang setzen
 		i2c_start();
 		i2c_write_byte(I2C_PCA9539_ADDR | I2C_WRITE);
-		i2c_write_byte(0x06);
+		i2c_write_byte(0x06); //Configuration Port 0 beschreiben
 		i2c_write_byte(0xff); //Pins werden als Eingang gesetzt, da die LEDs bei Aus noch leicht leuchten!
-		i2c_write_byte(0xff);
+		i2c_write_byte(0xff); //Configuration Port 1 beschreiben
 	} else {
 		//LEDs einschalten
 		i2c_start();
 		i2c_write_byte(I2C_PCA9539_ADDR | I2C_WRITE);
-		i2c_write_byte(0x07);
-		i2c_write_byte(0x00);
+		i2c_write_byte(0x07); //Configuration Port 1 beschreiben
+		i2c_write_byte(0x00); //Portpins als Ausgang setzen
 		i2c_stop();
 
 		i2c_start();
 		i2c_write_byte(I2C_PCA9539_ADDR | I2C_WRITE);
-		i2c_write_byte(0x03);
-		i2c_write_byte(0x00);
+		i2c_write_byte(0x03); //Output Port 1 beschreiben
+		i2c_write_byte(0x00); //Bits des Registers 0 setzen (einschalten)
 		i2c_stop();
 	}
 

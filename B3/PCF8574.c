@@ -15,8 +15,8 @@
  * @param changed
  */
 void PCF_interrupt(uint32_t *changed) {
-	if (digitalRead(InterruptI2CFrontpin, InterruptI2CFrontport) == LOW)
-		*changed = 1;
+	if (digitalRead(InterruptI2CFrontpin, InterruptI2CFrontport) == LOW)  //Interrupt Ausgang des Expanders auslesen
+		*changed = 1;  //Interrupt hat stattgefunden, wenn jeder steigenden oder fallenden Flanke der Portpins->LOW
 	else
 		*changed = 0;
 }
@@ -44,18 +44,18 @@ void writeFrontLED(uint32_t led) {
  * @return Zustand der Taster T1-T4
  */
 uint32_t getTkeys() {
-	uint32_t i2ckeys = 0b1111, changed = 0;
+	uint32_t i2ckeys = Tnokey, changed = 0;
 
 	PCF_interrupt(&changed);
 
-	if (changed) {
+	if (changed) {        //Wenn sich überhaupt ein Eingang des Expanders geändert hat
 		i2c_start();
 		i2c_write_byte(I2C_PCF8574A_ADDR | I2C_READ);
-		i2ckeys = i2c_read_byte(0);
+		i2ckeys = i2c_read_byte(0);  //Erhalte Zustand des Portexpander Registers
 		i2c_stop();
-		i2ckeys = i2ckeys >> 4;
-		i2ckeys &= (0b1111);
+		i2ckeys = i2ckeys >> 4;  //Mache T1 zum LSB (nächstes Bit T2, T3 und T4)
+		i2ckeys &= (Tnokey);     //Nur Taster auslesen
 	}
-	return i2ckeys;
+	return i2ckeys; //0, wenn Taster gedrückt
 
 }
