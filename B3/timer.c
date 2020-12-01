@@ -9,7 +9,7 @@
 #include "timer.h"
 
 /**
- * \brief <b>RIT Timer initialisieren</b><br>
+ * \brief <b>RIT initialisieren</b><br>
  * - Im Power Control for Peripherals Register (PCONP) wird das power/clock control bit gesetzt, um überhaupt die Peripherie einzuschalten.
  * Das Bit für den RIT ist 16
  * - Im Peripheral Clock Selection register 1 (PCKSEL1) wird die Taktfrequenz für den RIT gesetzt.

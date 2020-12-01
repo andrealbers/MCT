@@ -153,10 +153,10 @@ void clrSegments() {
  */
 void clrSegment(uint32_t segmentnr) {
 	const uint32_t segmente[] = { 0b11000000,   //1
-					0b11000001,   //2
-					0b11000010,   //3
-					0b11000011,   //4
-					};
+			0b11000001,   //2
+			0b11000010,   //3
+			0b11000011,   //4
+			};
 
 	//uint32_t ack = 1;
 
@@ -177,6 +177,20 @@ void clrSegment(uint32_t segmentnr) {
 }
 
 /**
+ * \brief <b>Schalte Dots ein</b>
+ */
+void setDots() {
+	startComm();
+	writeByte(wrDataToReg); //Setzen um Daten zum display register zu senden
+	stopComm();
+
+	startComm();
+	writeByte(0b11000001); //Zweites Segment beschreiben
+	writeByte(0b10000000); //Dot setzen
+	stopComm();
+}
+
+/**
  * \brief <b>Zeige übergebende Zahl an das übergebende Segment dar</b><br>
  *  - Starte Verbindung zum Treiber
  *  - Setze Byte für das Schreiben von Daten in das Display-Register (wrDataToReg)
@@ -191,10 +205,10 @@ void clrSegment(uint32_t segmentnr) {
  */
 void setSegment(uint32_t zahl, uint32_t segment) {
 	const uint32_t segmente[] = { 0b11000000,   //1
-				0b11000001,   //2
-				0b11000010,   //3
-				0b11000011,   //4
-				};
+			0b11000001,   //2
+			0b11000010,   //3
+			0b11000011,   //4
+			};
 
 	const uint32_t zahlen[10] = { 0b00111111,    // 0
 			0b00000110,    // 1
@@ -219,11 +233,10 @@ void setSegment(uint32_t zahl, uint32_t segment) {
 	writeByte(zahlen[zahl]);
 	stopComm();
 
-	/*
 	startComm();
-	ack = writeByte(DisplayON);  //Helligkeit setzen, wird nicht mehr benötigt, da die Helligkeit immer EIN ist
+	writeByte(DisplayON);
 	stopComm();
-*/
+
 }
 
 /**
@@ -245,7 +258,7 @@ void setinttoSegment(uint32_t zahl) {
 	uint32_t _zahl = zahl, posziffer = 0;
 
 	while (_zahl != 0) {
-		_zahl = _zahl / 10;  //532 -> 53 -> 2
+		_zahl = _zahl / 10;  //532 -> 53 -> 5 -> 0
 		posziffer++;
 	}
 

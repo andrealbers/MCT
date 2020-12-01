@@ -23,5 +23,6 @@ void clrSegments();
 void clrSegment(uint32_t segmentnr);
 void setSegment(uint32_t zahl, uint32_t segment);
 void setinttoSegment(uint32_t zahl);
+void setDots();
 
 #endif /* SIEBENSEGMENT_TM1637_H_ */

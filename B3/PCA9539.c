@@ -34,6 +34,7 @@ void writei2cRedLED(uint32_t setleds) {
 		i2c_write_byte(0x06); //Configuration Port 0 beschreiben
 		i2c_write_byte(0xff); //Pins werden als Eingang gesetzt, da die LEDs bei Aus noch leicht leuchten!
 		i2c_write_byte(0xff); //Configuration Port 1 beschreiben
+		i2c_stop();
 	} else {
 		//LEDs einschalten
 		i2c_start();
