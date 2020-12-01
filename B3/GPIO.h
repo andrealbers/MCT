@@ -5,6 +5,8 @@
 #ifndef GPIO_H_
 #define GPIO_H_
 
+#include "main.h"
+
 static LPC_GPIO_TypeDef (*const LPC_GPIO[5]) = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO2, LPC_GPIO3, LPC_GPIO4 }; //Um LPC_GPIO[port] zu verwenden
 
 //MAKROS FÜR pinMode (Bitkombination um PINMODE zu setzen)

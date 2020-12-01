@@ -5,7 +5,9 @@
 #ifndef PCF8574_H_
 #define PCF8574_H_
 
+#include "main.h"
 
+//MAKROS
 #define I2C_PCF8574A_ADDR 0x7E
 
 #define T1 0b1110  //T1 gedrückt
@@ -20,9 +22,7 @@
 #define I2CLED3 0b11111011     //Einschalten von LED3
 #define I2CLED4 0b11110111     //Einschalten von LED4
 
-#define InterruptI2CFrontpin 13
-#define InterruptI2CFrontport 2
-
+//PROTOYPEN
 void writeFrontLED(uint32_t led);
 uint32_t getTkeys();
 #endif /* PCF8574_H_ */

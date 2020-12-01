@@ -2,14 +2,9 @@
  *  \file HC_SR04.c
  */
 
-#ifdef __USE_CMSIS
-#include "LPC17xx.h"
-#endif
 
-#include "i2c_1769.h"
-#include "GPIO.h"
 #include "HC_SR04.h"
-#include "main.h"
+
 
 /**
  * \brief <b>Gleitkommazahl runden</b>

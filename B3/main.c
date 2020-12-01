@@ -38,7 +38,11 @@
  *	<b>writeSpeaker:</b> Erzeugen eines Tonsignals (wird bei aktivieren Alarm aufgerufen). <br>
  *	<b>distanzalarmHandler:</b> Wenn die Alarmfunktion aktiv ist, wird diese Funktion aufgerufen. Hier erfolgt die Berechnung, ob der aktiv gemessende Abstand den Wert von
  *	L1 über- bzw. unterschreitet. Wenn ja, werden hier die LEDs ein- & ausgeschaltet und writeSpeaker aufgerufen. <br>
- *  <b>timer_init:</b> RIT aktivieren <br>
+ *
+ *	<b><u>interrupts</u><b><br>
+ *  <b>timer_init:</b> RIT-Konfiguration <br>
+ *  <b>EINT3_init:</b> Konfiguration des Externen Interrupts 3 <br>
+ *  <b>EINT3_IRQHandler:</b> Handler für EINT3. Setzen der globalen Variable changed <br>
  *
  *  <b><u>GPIO</u></b> <br>
  *	<b>pinMode:</b> Setze den zu übergebenden Pin (+Portangabe) als PULLUP, PULLDOWN oder als OUTPUT. <br>
@@ -68,21 +72,8 @@
  *
 
  */
-#ifdef __USE_CMSIS
-#include "LPC17xx.h"
-#endif
 
-#include <cr_section_macros.h>
-#include <stdio.h>
-#include "GPIO.h"
-#include "HC_SR04.h"
-#include "Siebensegment_TM1637.h"
-#include "PCA9539.h"
-#include "PCF8574.h"
 #include "main.h"
-#include "lcdlib_1769.h"
-#include "i2c_1769.h"
-#include "timer.h"
 
 /**
  * \brief <b>Konfiguration der GPIO-Pins des Mikrocontrollers </b>
@@ -95,9 +86,6 @@ void io_init(void) {   //PIN, PORT; MODE (PULLUP, PULLDOWN, OUTPUT)
 
 	//Setze den Echopin des Ultraschallsensors bzw. des Treiber als Eingang im Pullup-Netzwerk
 	pinMode(HC_Echopin, HCport, PULLUP);
-
-	//Interrupt Ausgang des PCF8574 als Pullup setzen. Ein Interrupt liegt vor (LOW), wenn sich Flanken der inputs des ports ändern)
-	pinMode(InterruptI2CFrontpin, InterruptI2CFrontport, PULLUP);
 
 	//Orange LEDs auf dem Mainboard als Ausgang setzen
 	pinMode(LED0pin, yLEDport, OUTPUT);  //Wird gar nicht gebraucht..
@@ -534,6 +522,7 @@ int main(void) {
 	writeFrontLED(CLR_I2CLED);       //Frontpanel-LEDs ausschalten
 	set_rgb(RGB_AUS);                //Auf dem Board befindliche RGB-LED ausschalten
 	timer_init();                    //RIT initialisieren
+    EINT3_init();                    //Interrupt EINT3 initialisieren
 
 	while (1) {
 		i2ckeys = getTkeys();  //Erhalte Zustand von T1-T4

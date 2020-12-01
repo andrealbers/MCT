@@ -2,11 +2,9 @@
  *  \file PCA9539.c
  */
 
-#ifdef __USE_CMSIS
-#include "LPC17xx.h"
-#endif
+
 #include "PCA9539.h"
-#include "i2c_1769.h"
+
 
 /**
  * \brief <b>Die 8 linken roten LEDs auf dem Mainboard ein/ausschalten</b><br>

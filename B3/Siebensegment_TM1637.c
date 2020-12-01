@@ -2,13 +2,8 @@
  *  \file Siebensegment_TM1637.c
  */
 
-#ifdef __USE_CMSIS
-#include "LPC17xx.h"
-#endif
 #include "Siebensegment_TM1637.h"
-#include "GPIO.h"
-#include "lcdlib_1769.h"
-#include "main.h"
+
 
 /**
  * \brief <b>Ein Byte zum Siebensegment-Treiber TM1637 senden</b><br>

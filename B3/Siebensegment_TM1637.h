@@ -5,6 +5,9 @@
 #ifndef SIEBENSEGMENT_TM1637_H_
 #define SIEBENSEGMENT_TM1637_H_
 
+#include "main.h"
+
+//PROTOTYPEN
 #define wrDataToReg 0b01000000
 
 #define DisplayOFF 0b10000000 //Display AUS
@@ -15,7 +18,7 @@
 extern const uint32_t segmente[4];
 extern const uint32_t zahlen[10];
 
-
+//MAKROS
 uint32_t writeByte(uint8_t data);
 void startComm();
 void stopComm();

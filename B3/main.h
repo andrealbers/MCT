@@ -5,6 +5,9 @@
  *
  * \date 12. November 2020
  *
+ * \version 1.2
+ * Erstellung interrupts.c/.h
+ *
  * \version 1.1
  * Auslesen der Taster T1-T4 ausschließlich dann, wenn Interrupt erfolgte
  *
@@ -14,6 +17,21 @@
 
 #ifndef MAIN_H_
 #define MAIN_H_
+
+#ifdef __USE_CMSIS
+#include "LPC17xx.h"
+#endif
+
+#include <cr_section_macros.h>
+#include <stdio.h>
+#include "GPIO.h"
+#include "HC_SR04.h"
+#include "Siebensegment_TM1637.h"
+#include "PCA9539.h"
+#include "PCF8574.h"
+#include "lcdlib_1769.h"
+#include "i2c_1769.h"
+#include "interrupts.h"
 
 //MAKROS
 #define TA1 0b001      //TA1 gedrückt

@@ -2,9 +2,7 @@
  *  \file GPIO.c
  */
 
-#ifdef __USE_CMSIS
-#include "LPC17xx.h"
-#endif
+
 #include "GPIO.h"
 
 /**

@@ -5,6 +5,8 @@
 #ifndef HC_SR04_H_
 #define HC_SR04_H_
 
+#include "main.h"
+
 //MAKROS
 #define PCRIT 1 << 16        //Power Control -> Peripherie aktivieren
 #define RITEN 1 << 3         //Timer aktivieren/deaktivieren -> 1 = Aktivieren , 0 = Deaktivieren
